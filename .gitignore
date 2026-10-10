@@ -8,6 +8,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.egg-info/
 
 # Experiment checkpoints & data cache
 checkpoints/
@@ -30,3 +31,8 @@ wandb/
 
 # Reference repository (cloned external)
 external/
+
+# Documents & research PDFs
+docs/
+*.pdf
+
