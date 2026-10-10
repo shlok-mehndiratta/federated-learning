@@ -1,0 +1,32 @@
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Experiment checkpoints & data cache
+checkpoints/
+data/cache/
+runs/
+*.pt
+*.pth
+*.tar
+*.ckpt
+
+# Testing and IDE
+.pytest_cache/
+.coverage
+htmlcov/
+.vscode/
+.idea/
+
+# Wandb
+wandb/
+
+# Reference repository (cloned external)
+external/
