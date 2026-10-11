@@ -86,5 +86,37 @@
     "loss_barrier": 0.0070,
     "d_pair": 0.0525,
     "merged_acc": 0.8558
+  },
+  {
+    "onset_step": 1950,
+    "onset_pct": 10.0,
+    "seed": 3,
+    "loss_barrier": 0.0067,
+    "d_pair": 0.0533,
+    "merged_acc": 0.8532
+  },
+  {
+    "onset_step": 9750,
+    "onset_pct": 50.0,
+    "seed": 1,
+    "loss_barrier": 0.0000,
+    "d_pair": 0.0144,
+    "merged_acc": 0.8573
+  },
+  {
+    "onset_step": 9750,
+    "onset_pct": 50.0,
+    "seed": 2,
+    "loss_barrier": 0.0001,
+    "d_pair": 0.0136,
+    "merged_acc": 0.8515
+  },
+  {
+    "onset_step": 9750,
+    "onset_pct": 50.0,
+    "seed": 3,
+    "loss_barrier": 0.0000,
+    "d_pair": 0.0142,
+    "merged_acc": 0.8572
   }
 ]
