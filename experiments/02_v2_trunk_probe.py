@@ -119,6 +119,9 @@ def run_v2_fork(
         curr_step += local_steps
         round_idx += 1
 
+        if round_idx % 50 == 0 or curr_step >= onset_step:
+            print(f"  [Trunk] Round {round_idx} | Step {curr_step}/{onset_step}", flush=True)
+
     # Phase 2: Fork into Replica 1 and Replica 2
     model_rep1 = deepcopy(global_model)
     model_rep2 = deepcopy(global_model)
@@ -127,7 +130,7 @@ def run_v2_fork(
     perturb_loader = create_deterministic_loader(train_set, batch_size=batch_size, shuffle=True, seed=seed + 9999)
     apply_batch_perturbation(model_rep2, perturb_loader, device=device, scale=perturb_scale)
 
-    print(f"[Seed {seed}] Training both FL replicas for remaining steps ({total_steps - curr_step})...")
+    print(f"[Seed {seed}] Training both FL replicas for remaining steps ({total_steps - curr_step})...", flush=True)
 
     # Phase 3: Train both replicas for remaining steps with identical data
     while curr_step < total_steps:
@@ -154,8 +157,12 @@ def run_v2_fork(
         curr_step += local_steps
         round_idx += 1
 
+        if round_idx % 50 == 0 or curr_step >= total_steps:
+            pct = (curr_step / total_steps) * 100.0
+            print(f"  [Replicas] Round {round_idx} | Step {curr_step}/{total_steps} ({pct:.1f}%)", flush=True)
+
     # Phase 4: Measurement
-    print(f"[Seed {seed}] Measuring 11-point barrier between replicas...")
+    print(f"[Seed {seed}] Measuring 11-point barrier between replicas...", flush=True)
     barrier_res = compute_linear_barrier(model_rep1, model_rep2, test_loader, num_points=num_eval_points, device=device)
     dist_res = compute_normalized_distances(model_rep1, model_rep2, model_anchor=global_model)
     _, acc1 = evaluate_loss_and_acc(model_rep1, test_loader, device=device)
