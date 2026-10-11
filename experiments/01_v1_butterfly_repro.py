@@ -248,9 +248,25 @@ def main():
     if args.use_wandb and wandb is not None:
         wandb.init(project=args.wandb_project, config=vars(args))
 
+    out_file = os.path.join(args.output_dir, "v1_results.json")
     all_results = []
+    completed_keys = set()
+    if os.path.exists(out_file):
+        try:
+            with open(out_file, "r") as f:
+                all_results = json.load(f)
+            for r in all_results:
+                completed_keys.add((r["onset_step"], r["seed"]))
+            print(f"Loaded {len(all_results)} existing results from {out_file}. Resuming...")
+        except Exception as e:
+            print(f"Warning: Could not read existing results ({e}). Starting fresh.")
+
     for onset in onset_steps:
         for seed in args.seeds:
+            if (onset, seed) in completed_keys:
+                print(f"--> Skipping Onset step {onset} (Seed {seed}) - already completed.")
+                continue
+
             res = run_v1_fork(
                 onset_step=onset,
                 total_steps=total_steps,
@@ -265,11 +281,12 @@ def main():
                 use_wandb=args.use_wandb
             )
             all_results.append(res)
+            completed_keys.add((onset, seed))
 
-    # Save summary
-    out_file = os.path.join(args.output_dir, "v1_results.json")
-    with open(out_file, "w") as f:
-        json.dump(all_results, f, indent=2)
+            # Incremental save so no progress is ever lost
+            with open(out_file, "w") as f:
+                json.dump(all_results, f, indent=2)
+
     print(f"\nAll V1 runs complete! Results saved to {out_file}")
 
 
