@@ -69,8 +69,8 @@ def apply_batch_perturbation(
 
 
 def run_v2_fork(
-    onset_step: int,
-    total_steps: int,
+    onset_round: int,
+    total_rounds: int,
     seed: int,
     device: torch.device,
     train_set,
@@ -83,7 +83,7 @@ def run_v2_fork(
     num_eval_points: int = 11,
     use_wandb: bool = False
 ) -> Dict[str, any]:
-    """Runs a single federated perturb-and-fork experiment at s=0."""
+    """Runs a single federated perturb-and-fork experiment at s=0 for total_rounds."""
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -98,13 +98,11 @@ def run_v2_fork(
     ]
     test_loader = create_deterministic_loader(test_set, batch_size=256, shuffle=False)
 
-    curr_step = 0
     round_idx = 0
+    print(f"\n[Seed {seed}] Running federated trunk to onset round {onset_round}/{total_rounds}...", flush=True)
 
-    print(f"\n[Seed {seed}] Running federated trunk to onset step {onset_step}/{total_steps}...")
-
-    # Phase 1: Train trunk until onset_step
-    while curr_step < onset_step:
+    # Phase 1: Train trunk until onset_round
+    while round_idx < onset_round:
         round_seed = seed + round_idx * 1000
         client_states = []
         base_state = deepcopy(global_model.state_dict())
@@ -116,11 +114,10 @@ def run_v2_fork(
 
         avg_state = average_model_weights(client_states)
         global_model.load_state_dict(avg_state)
-        curr_step += local_steps
         round_idx += 1
 
-        if round_idx % 50 == 0 or curr_step >= onset_step:
-            print(f"  [Trunk] Round {round_idx} | Step {curr_step}/{onset_step}", flush=True)
+        if round_idx % 5 == 0 or round_idx >= onset_round:
+            print(f"  [Trunk] Round {round_idx}/{onset_round}", flush=True)
 
     # Phase 2: Fork into Replica 1 and Replica 2
     model_rep1 = deepcopy(global_model)
@@ -130,10 +127,10 @@ def run_v2_fork(
     perturb_loader = create_deterministic_loader(train_set, batch_size=batch_size, shuffle=True, seed=seed + 9999)
     apply_batch_perturbation(model_rep2, perturb_loader, device=device, scale=perturb_scale)
 
-    print(f"[Seed {seed}] Training both FL replicas for remaining steps ({total_steps - curr_step})...", flush=True)
+    print(f"[Seed {seed}] Training both FL replicas for remaining rounds ({total_rounds - round_idx})...", flush=True)
 
-    # Phase 3: Train both replicas for remaining steps with identical data
-    while curr_step < total_steps:
+    # Phase 3: Train both replicas for remaining rounds with identical data
+    while round_idx < total_rounds:
         round_seed = seed + round_idx * 1000
 
         # Step Replica 1
@@ -154,12 +151,11 @@ def run_v2_fork(
             states_2.append(deepcopy(model_rep2.state_dict()))
         model_rep2.load_state_dict(average_model_weights(states_2))
 
-        curr_step += local_steps
         round_idx += 1
 
-        if round_idx % 50 == 0 or curr_step >= total_steps:
-            pct = (curr_step / total_steps) * 100.0
-            print(f"  [Replicas] Round {round_idx} | Step {curr_step}/{total_steps} ({pct:.1f}%)", flush=True)
+        if round_idx % 5 == 0 or round_idx >= total_rounds:
+            pct = (round_idx / total_rounds) * 100.0
+            print(f"  [Replicas] Round {round_idx}/{total_rounds} ({pct:.1f}%)", flush=True)
 
     # Phase 4: Measurement
     print(f"[Seed {seed}] Measuring 11-point barrier between replicas...", flush=True)
@@ -169,8 +165,8 @@ def run_v2_fork(
     _, acc2 = evaluate_loss_and_acc(model_rep2, test_loader, device=device)
 
     result = {
-        "onset_step": onset_step,
-        "onset_pct": float(onset_step) / float(total_steps) * 100.0,
+        "onset_round": onset_round,
+        "onset_pct": float(onset_round) / float(total_rounds) * 100.0,
         "seed": seed,
         "loss_barrier": barrier_res["barrier"],
         "acc_dip": barrier_res["max_acc_dip"],
@@ -181,7 +177,7 @@ def run_v2_fork(
         "merged_acc": barrier_res["merged_acc"],
     }
 
-    print(f"--> [V2 FL] Onset {result['onset_pct']:.1f}% | Loss Barrier: {result['loss_barrier']:.4f} | D_pair: {result['d_pair']:.4f} | Merged Acc: {result['merged_acc']*100:.2f}%")
+    print(f"--> [V2 FL] Onset {result['onset_pct']:.1f}% (Round {onset_round}) | Loss Barrier: {result['loss_barrier']:.4f} | D_pair: {result['d_pair']:.4f} | Merged Acc: {result['merged_acc']*100:.2f}%", flush=True)
 
     if use_wandb and wandb is not None:
         wandb.log({
@@ -197,9 +193,9 @@ def run_v2_fork(
 
 def main():
     parser = argparse.ArgumentParser(description="Probe V2: Locate Unstable Phase in FedAvg Trunk (s=0)")
-    parser.add_argument("--epochs", type=int, default=50)
+    parser.add_argument("--rounds", type=int, default=100, help="Total global FL communication rounds (default 100 = 50 CIFAR-10 epochs)")
     parser.add_argument("--batch_size", type=int, default=128)
-    parser.add_argument("--local_steps", type=int, default=10)
+    parser.add_argument("--local_steps", type=int, default=10, help="Local gradient steps per client per round")
     parser.add_argument("--lr", type=float, default=0.1)
     parser.add_argument("--perturb_scale", type=float, default=0.01)
     parser.add_argument("--seeds", type=int, nargs="+", default=[1, 2, 3])
@@ -221,17 +217,18 @@ def main():
     # IID partition (s=0.0) across 20 clients
     partitions = partition_dataset(targets, num_classes=10, s=0.0, alpha=1.0, num_clients_per_group=10, seed=42)
 
-    total_steps = (len(train_set) // args.batch_size) * args.epochs
+    total_rounds = args.rounds
 
     if args.toy_run:
         print("--- TOY RUN MODE (Smoke test) ---")
-        total_steps = 30
-        onset_steps = [0, 10, 20]
+        total_rounds = 6
+        onset_rounds = [0, 2, 4]
         args.seeds = [1]
-        args.local_steps = 5
+        args.local_steps = 2
     else:
-        onset_pcts = [0.0, 0.001, 0.005, 0.01, 0.02, 0.05, 0.20]
-        onset_steps = [int(p * total_steps) for p in onset_pcts]
+        # Onset percentages across total rounds: 0%, 1%, 2%, 5%, 10%, 20%, 50%
+        onset_pcts = [0.0, 0.01, 0.02, 0.05, 0.10, 0.20, 0.50]
+        onset_rounds = [int(p * total_rounds) for p in onset_pcts]
 
     if args.use_wandb and wandb is not None:
         wandb.init(project=args.wandb_project, config=vars(args))
@@ -244,20 +241,20 @@ def main():
             with open(out_file, "r") as f:
                 all_results = json.load(f)
             for r in all_results:
-                completed_keys.add((r["onset_step"], r["seed"]))
+                completed_keys.add((r.get("onset_round", r.get("onset_step")), r["seed"]))
             print(f"Loaded {len(all_results)} existing results from {out_file}. Resuming...")
         except Exception as e:
             print(f"Warning: Could not read existing results ({e}). Starting fresh.")
 
-    for onset in onset_steps:
+    for onset_r in onset_rounds:
         for seed in args.seeds:
-            if (onset, seed) in completed_keys:
-                print(f"--> Skipping Onset step {onset} (Seed {seed}) - already completed.")
+            if (onset_r, seed) in completed_keys:
+                print(f"--> Skipping Onset Round {onset_r} (Seed {seed}) - already completed.")
                 continue
 
             res = run_v2_fork(
-                onset_step=onset,
-                total_steps=total_steps,
+                onset_round=onset_r,
+                total_rounds=total_rounds,
                 seed=seed,
                 device=device,
                 train_set=train_set,
@@ -270,7 +267,7 @@ def main():
                 use_wandb=args.use_wandb
             )
             all_results.append(res)
-            completed_keys.add((onset, seed))
+            completed_keys.add((onset_r, seed))
 
             # Incremental save so no progress is lost on disconnect
             with open(out_file, "w") as f:
