@@ -19,6 +19,7 @@ class OutageSimulator:
         partitions: Dict[int, List[int]],
         group_A_cids: List[int],
         group_B_cids: List[int],
+        model_B: Optional[nn.Module] = None,
         lr: float = 0.1,
         local_steps_per_round: int = 10,
         device: torch.device = torch.device("cpu")
@@ -29,7 +30,7 @@ class OutageSimulator:
 
         # Model replicas for Group A and Group B
         self.model_A = deepcopy(base_model).to(device)
-        self.model_B = deepcopy(base_model).to(device)
+        self.model_B = deepcopy(model_B if model_B is not None else base_model).to(device)
 
         self.clients_A = [
             FederatedClient(cid, dataset, partitions[cid], lr=lr, device=device)
@@ -45,7 +46,8 @@ class OutageSimulator:
         num_rounds: int,
         isolation_level: str = "I0",
         sparse_freq_R: int = 5,
-        seed: int = 42
+        seed: int = 42,
+        verbose: bool = False
     ) -> Tuple[nn.Module, nn.Module]:
         """Runs outage simulation for num_rounds.
         
@@ -58,6 +60,9 @@ class OutageSimulator:
 
         for r in range(num_rounds):
             round_seed = seed + r * 1000
+
+            if verbose and ((r + 1) % 5 == 0 or (r + 1) == num_rounds):
+                print(f"    [Outage {isolation_level}] Round {r + 1}/{num_rounds}", flush=True)
 
             # 1. Group A internal training & aggregation
             states_A: List[OrderedDict] = []
