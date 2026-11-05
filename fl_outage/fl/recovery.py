@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 
-from fl_outage.fl.trunk import FedAvgTrunk
+from fl_outage.fl.server import FederatedServer
 from fl_outage.metrics.barrier import evaluate_loss_and_acc
 
 
@@ -27,7 +27,7 @@ def run_recovery_evaluation(
     - rtb (Rounds-to-Baseline): int (or max_recovery_rounds if not reached)
     - recovery_history: list of round evaluations
     """
-    trunk = FedAvgTrunk(
+    server = FederatedServer(
         model=merged_model,
         dataset=dataset,
         partitions=partitions,
@@ -60,8 +60,8 @@ def run_recovery_evaluation(
     rtb = max_recovery_rounds
 
     for r in range(1, max_recovery_rounds + 1):
-        round_res = trunk.run_rounds(num_rounds=1, start_step=r * local_steps_per_round, seed=seed + r * 50)
-        curr_loss, curr_acc = evaluate_loss_and_acc(trunk.model, eval_loader, device=device)
+        round_res = server.run_rounds(num_rounds=1, start_step=r * local_steps_per_round, seed=seed + r * 50)
+        curr_loss, curr_acc = evaluate_loss_and_acc(server.model, eval_loader, device=device)
         history.append({
             "round": r,
             "loss": curr_loss,

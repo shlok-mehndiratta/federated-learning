@@ -4,7 +4,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-from fl_outage.fl.trunk import average_model_weights
+from fl_outage.fl.server import average_model_weights
 
 
 def merge_models(

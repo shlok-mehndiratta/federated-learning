@@ -1,7 +1,7 @@
-"""Experiment 02: Probe V2 - Locate Unstable Phase in FedAvg Trunk (s=0).
+"""Experiment 02: Milestone 1 - Federated Learning Stability Boundary Evaluation (s=0.0).
 
-Applies the perturb-and-fork probe to a 20-client Federated Learning trunk under IID data (s=0.0):
-1. Trains global FedAvg trunk with plain SGD (constant lr=0.1, no momentum).
+Applies the perturb-and-fork evaluation to a 20-client Federated Learning setup under IID data (s=0.0):
+1. Trains global FedAvg model with plain SGD (constant lr=0.1, no momentum).
 2. At specified onset step k, forks the global model into Replica 1 and Replica 2.
 3. Applies a controlled batch-gradient perturbation to Replica 2.
 4. Trains both replicas for remaining rounds with identical client sampling and batch ordering.
@@ -25,7 +25,7 @@ from fl_outage.data.cifar import load_cifar10, create_deterministic_loader
 from fl_outage.data.partition import partition_dataset
 from fl_outage.models.resnet import ResNet20LN
 from fl_outage.fl.client import FederatedClient
-from fl_outage.fl.trunk import average_model_weights
+from fl_outage.fl.server import average_model_weights
 from fl_outage.metrics.barrier import compute_linear_barrier, evaluate_loss_and_acc
 from fl_outage.metrics.distances import compute_normalized_distances
 
@@ -99,9 +99,9 @@ def run_v2_fork(
     test_loader = create_deterministic_loader(test_set, batch_size=256, shuffle=False)
 
     round_idx = 0
-    print(f"\n[Seed {seed}] Running federated trunk to onset round {onset_round}/{total_rounds}...", flush=True)
+    print(f"\n[Seed {seed}] Running federated training to onset round {onset_round}/{total_rounds}...", flush=True)
 
-    # Phase 1: Train trunk until onset_round
+    # Phase 1: Train global model until onset_round
     while round_idx < onset_round:
         round_seed = seed + round_idx * 1000
         client_states = []
@@ -117,7 +117,7 @@ def run_v2_fork(
         round_idx += 1
 
         if round_idx % 5 == 0 or round_idx >= onset_round:
-            print(f"  [Trunk] Round {round_idx}/{onset_round}", flush=True)
+            print(f"  [Global] Round {round_idx}/{onset_round}", flush=True)
 
     # Phase 2: Fork into Replica 1 and Replica 2
     model_rep1 = deepcopy(global_model)
@@ -177,22 +177,22 @@ def run_v2_fork(
         "merged_acc": barrier_res["merged_acc"],
     }
 
-    print(f"--> [V2 FL] Onset {result['onset_pct']:.1f}% (Round {onset_round}) | Loss Barrier: {result['loss_barrier']:.4f} | D_pair: {result['d_pair']:.4f} | Merged Acc: {result['merged_acc']*100:.2f}%", flush=True)
+    print(f"--> [FL Stability] Onset {result['onset_pct']:.1f}% (Round {onset_round}) | Loss Barrier: {result['loss_barrier']:.4f} | D_pair: {result['d_pair']:.4f} | Merged Acc: {result['merged_acc']*100:.2f}%", flush=True)
 
     if use_wandb and wandb is not None:
         wandb.log({
-            "v2_fl/onset_pct": result["onset_pct"],
-            "v2_fl/loss_barrier": result["loss_barrier"],
-            "v2_fl/d_pair": result["d_pair"],
-            "v2_fl/merged_acc": result["merged_acc"],
-            "v2_fl/seed": seed
+            "fl_stability/onset_pct": result["onset_pct"],
+            "fl_stability/loss_barrier": result["loss_barrier"],
+            "fl_stability/d_pair": result["d_pair"],
+            "fl_stability/merged_acc": result["merged_acc"],
+            "fl_stability/seed": seed
         })
 
     return result
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Probe V2: Locate Unstable Phase in FedAvg Trunk (s=0)")
+    parser = argparse.ArgumentParser(description="Milestone 1: Federated Stability Boundary Evaluation (s=0.0)")
     parser.add_argument("--rounds", type=int, default=100, help="Total global FL communication rounds (default 100 = 50 CIFAR-10 epochs)")
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--local_steps", type=int, default=10, help="Local gradient steps per client per round")
@@ -201,15 +201,15 @@ def main():
     parser.add_argument("--seeds", type=int, nargs="+", default=[1, 2, 3])
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--data_root", type=str, default="./data/cache")
-    parser.add_argument("--output_dir", type=str, default="./runs/v2_trunk")
+    parser.add_argument("--output_dir", type=str, default="./runs/federated_stability")
     parser.add_argument("--use_wandb", action="store_true")
-    parser.add_argument("--wandb_project", type=str, default="fl-outage-v2")
+    parser.add_argument("--wandb_project", type=str, default="fl-federated-stability")
     parser.add_argument("--toy_run", action="store_true")
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
     device = torch.device(args.device)
-    print(f"Running Probe V2 on device: {device}")
+    print(f"Running Federated Stability Evaluation on device: {device}")
 
     train_set, test_set = load_cifar10(root=args.data_root, download=True)
     targets = np.array(train_set.targets)
@@ -233,7 +233,11 @@ def main():
     if args.use_wandb and wandb is not None:
         wandb.init(project=args.wandb_project, config=vars(args))
 
-    out_file = os.path.join(args.output_dir, "v2_results.json")
+    out_file = os.path.join(args.output_dir, "federated_results.json")
+    # Support backward compatibility with existing v2_results.json
+    legacy_file = os.path.join(args.output_dir, "v2_results.json")
+    if not os.path.exists(out_file) and os.path.exists(legacy_file):
+        out_file = legacy_file
     all_results = []
     completed_keys = set()
     if os.path.exists(out_file):

@@ -1,4 +1,4 @@
-"""Experiment 01: Probe V1 - Exact Reproduction of The Butterfly Effect (ICML 2025).
+"""Experiment 01: Milestone 1 - Centralized SGD Stability Boundary Evaluation.
 
 Implements the centralized spawn-and-perturb protocol on CIFAR-10 with ResNet-20 LayerNorm:
 1. Trains a base model with SGD (lr=0.1, momentum=0.9, triangular schedule).
@@ -110,8 +110,8 @@ def run_v1_fork(
     test_loader = create_deterministic_loader(test_set, batch_size=256, shuffle=False)
     data_iter = iter(train_loader)
 
-    # Phase 1: Train trunk from step 0 to onset_step
-    print(f"\n[Seed {seed}] Training trunk to onset step {onset_step}/{total_steps}...")
+    # Phase 1: Train base model from step 0 to onset_step
+    print(f"\n[Seed {seed}] Training base model to onset step {onset_step}/{total_steps}...")
     for step in range(onset_step):
         try:
             x, y = next(data_iter)
@@ -211,7 +211,7 @@ def run_v1_fork(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Probe V1: Butterfly Effect Centralized Reproduction")
+    parser = argparse.ArgumentParser(description="Milestone 1: Centralized SGD Stability Boundary Evaluation")
     parser.add_argument("--epochs", type=int, default=50, help="Total training epochs (default 50 = 19,531 steps)")
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--lr", type=float, default=0.1)
@@ -220,15 +220,15 @@ def main():
     parser.add_argument("--seeds", type=int, nargs="+", default=[1, 2, 3])
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--data_root", type=str, default="./data/cache")
-    parser.add_argument("--output_dir", type=str, default="./runs/v1_butterfly")
+    parser.add_argument("--output_dir", type=str, default="./runs/centralized_stability")
     parser.add_argument("--use_wandb", action="store_true")
-    parser.add_argument("--wandb_project", type=str, default="fl-outage-v1")
+    parser.add_argument("--wandb_project", type=str, default="fl-centralized-stability")
     parser.add_argument("--toy_run", action="store_true", help="Quick smoke test on small steps")
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
     device = torch.device(args.device)
-    print(f"Running Probe V1 on device: {device}")
+    print(f"Running Centralized Stability Evaluation on device: {device}")
 
     # Load CIFAR-10
     train_set, test_set = load_cifar10(root=args.data_root, download=True)
@@ -248,7 +248,11 @@ def main():
     if args.use_wandb and wandb is not None:
         wandb.init(project=args.wandb_project, config=vars(args))
 
-    out_file = os.path.join(args.output_dir, "v1_results.json")
+    out_file = os.path.join(args.output_dir, "centralized_results.json")
+    # Support backward compatibility with existing v1_results.json
+    legacy_file = os.path.join(args.output_dir, "v1_results.json")
+    if not os.path.exists(out_file) and os.path.exists(legacy_file):
+        out_file = legacy_file
     all_results = []
     completed_keys = set()
     if os.path.exists(out_file):

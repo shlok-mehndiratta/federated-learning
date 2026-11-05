@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset
 
 from fl_outage.fl.client import FederatedClient
-from fl_outage.fl.trunk import average_model_weights
+from fl_outage.fl.server import average_model_weights
 
 
 class OutageSimulator:

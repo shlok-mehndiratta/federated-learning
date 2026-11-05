@@ -1,7 +1,7 @@
-"""Experiment 03: Week 3 - Baseline Anchors (Zhu & Randl) & 1-Seed Pilot Sweep.
+"""Experiment 03: Milestone 2 - Literature Replication & Pilot Evaluation.
 
 This script executes Milestone M2 / Gate G2:
-1. Baseline Anchors:
+1. Literature Replication Anchors:
    - Anchor V3b (Zhu et al. reproduction): k=0, s=0.8, full isolation I0, DIFFERENT initializations.
    - Anchor V3a (Our counterpart): k=0, s=0.8, full isolation I0, SHARED initialization.
    - Anchor V4 (Randl reproduction): k>0, s=0.8, dense gossip coupling I2 vs full isolation I0.
@@ -10,7 +10,7 @@ This script executes Milestone M2 / Gate G2:
    - Seed: 42.
 
 Resource-efficient features:
-- Caches federated trunk checkpoints once to avoid redundant retraining.
+- Caches global model checkpoints once to avoid redundant retraining.
 - Sequential client training guarantees peak VRAM < 300 MB.
 - Incremental JSON saving with auto-resume so no work is lost on disconnect.
 - Progress logging with flush=True every 5 rounds.
@@ -29,7 +29,7 @@ from torch.utils.data import Subset
 from fl_outage.data.cifar import load_cifar10, create_deterministic_loader
 from fl_outage.data.partition import partition_dataset
 from fl_outage.models.resnet import ResNet20LN
-from fl_outage.fl.trunk import FedAvgTrunk
+from fl_outage.fl.server import FederatedServer
 from fl_outage.fl.outage import OutageSimulator
 from fl_outage.fl.merge import merge_models
 from fl_outage.fl.recovery import run_recovery_evaluation
@@ -277,12 +277,12 @@ def run_anchors(
     # -------------------------------------------------------------
     onset_v4 = 2 if args.quick_test else 5
 
-    # Train a brief trunk to onset_v4
-    print(f"\n--> [Anchor V4] Pre-training shared trunk to round {onset_v4}...", flush=True)
+    # Pre-train shared global model to onset_v4
+    print(f"\n--> [Anchor V4] Pre-training shared global model to round {onset_v4}...", flush=True)
     set_seed(args.seed)
-    trunk_model = ResNet20LN(num_classes=10, width_base=args.width_base).to(device)
-    trunk = FedAvgTrunk(
-        model=trunk_model,
+    global_model = ResNet20LN(num_classes=10, width_base=args.width_base).to(device)
+    server = FederatedServer(
+        model=global_model,
         dataset=train_set,
         partitions=recovery_partitions,
         eval_loader=eval_loader,
@@ -291,8 +291,8 @@ def run_anchors(
         device=device,
         checkpoint_dir=os.path.join(args.output_dir, "checkpoints")
     )
-    trunk.run_rounds(num_rounds=onset_v4, seed=args.seed)
-    base_v4_state = deepcopy(trunk.model.state_dict())
+    server.run_rounds(num_rounds=onset_v4, seed=args.seed)
+    base_v4_state = deepcopy(server.model.state_dict())
 
     for iso in ["I2", "I0"]:
         v4_key = ("anchor_v4", onset_v4, 0.8, iso, "shared_init")
@@ -367,7 +367,7 @@ def run_pilot(
 ):
     """Executes the 1-seed pilot sweep using cached trunk checkpoints."""
     print("\n" + "=" * 70, flush=True)
-    print("EXECUTING WEEK 3 PILOT SWEEP (GATE G2 PRE-REGISTRATION DECISION)", flush=True)
+    print("EXECUTING MILESTONE 2: PILOT SWEEP & PRE-REGISTRATION EVALUATION", flush=True)
     print("=" * 70, flush=True)
 
     targets = get_dataset_targets(train_set)
@@ -383,25 +383,25 @@ def run_pilot(
         s_levels = [0.0, 1.0]
         isolation_levels = ["I0", "I2"]
 
-    # 1. Train federated trunk once and save checkpoints
+    # 1. Train federated global model once and save checkpoints
     max_onset = max(onset_rounds)
-    checkpoint_dir = os.path.join(args.output_dir, "trunk_checkpoints")
+    checkpoint_dir = os.path.join(args.output_dir, "global_checkpoints")
     os.makedirs(checkpoint_dir, exist_ok=True)
 
     recovery_partitions = partition_dataset(
         targets, num_classes=10, s=0.0, alpha=1.0, num_clients_per_group=10, seed=args.seed
     )
 
-    print(f"\n--> Training shared baseline trunk up to round {max_onset}...", flush=True)
+    print(f"\n--> Training shared global baseline model up to round {max_onset}...", flush=True)
     set_seed(args.seed)
-    trunk_model = ResNet20LN(num_classes=10, width_base=args.width_base).to(device)
+    global_model = ResNet20LN(num_classes=10, width_base=args.width_base).to(device)
 
     # Save initial model state at round 0
-    trunk_states = {0: deepcopy(trunk_model.state_dict())}
+    global_states = {0: deepcopy(global_model.state_dict())}
 
     if max_onset > 0:
-        trunk = FedAvgTrunk(
-            model=trunk_model,
+        server = FederatedServer(
+            model=global_model,
             dataset=train_set,
             partitions=recovery_partitions,
             eval_loader=eval_loader,
@@ -411,10 +411,10 @@ def run_pilot(
             checkpoint_dir=checkpoint_dir
         )
         for r in range(1, max_onset + 1):
-            trunk.run_rounds(num_rounds=1, seed=args.seed + r * 10)
+            server.run_rounds(num_rounds=1, seed=args.seed + r * 10)
             if r in onset_rounds:
-                trunk_states[r] = deepcopy(trunk.model.state_dict())
-                print(f"    Saved trunk checkpoint at Round {r}", flush=True)
+                global_states[r] = deepcopy(server.model.state_dict())
+                print(f"    Saved global checkpoint at Round {r}", flush=True)
 
     # Pre-generate partitions for each s level
     partition_cache = {}
@@ -423,7 +423,7 @@ def run_pilot(
             targets, num_classes=10, s=s, alpha=1.0, num_clients_per_group=10, seed=args.seed
         )
 
-    # 2. Sweep across all (s, k, I) cells branching from cached trunk states
+    # 2. Sweep across all (s, k, I) cells branching from cached global model states
     total_cells = len(s_levels) * len(onset_rounds) * len(isolation_levels)
     cell_idx = 0
 
@@ -441,7 +441,7 @@ def run_pilot(
                 set_seed(args.seed + cell_idx * 100)
 
                 base_model = ResNet20LN(num_classes=10, width_base=args.width_base).to(device)
-                base_model.load_state_dict(trunk_states[k])
+                base_model.load_state_dict(global_states[k])
 
                 sim = OutageSimulator(
                     base_model=base_model,
@@ -495,11 +495,11 @@ def run_pilot(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Week 3: Baseline Anchors & Pilot Sweep")
+    parser = argparse.ArgumentParser(description="Milestone 2: Literature Replication & Pilot Evaluation")
     parser.add_argument("--mode", type=str, default="all", choices=["all", "anchors", "pilot"])
     parser.add_argument("--data_root", type=str, default="./data/cache")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
-    parser.add_argument("--output_dir", type=str, default="./runs/week3_pilot")
+    parser.add_argument("--output_dir", type=str, default="./runs/pilot_evaluation")
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--lr", type=float, default=0.1)
     parser.add_argument("--local_steps", type=int, default=10)
@@ -512,7 +512,7 @@ def main():
 
     os.makedirs(args.output_dir, exist_ok=True)
     device = torch.device(args.device)
-    print(f"Starting Week 3 Runner on device: {device} | Mode: {args.mode}")
+    print(f"Starting Milestone 2 Runner on device: {device} | Mode: {args.mode}")
 
     # Load CIFAR-10
     train_set, test_set = load_cifar10(root=args.data_root, download=True)
@@ -532,7 +532,12 @@ def main():
     # Estimate unbroken baseline accuracy target (provisional target for RTB tolerance check)
     target_baseline_acc = 0.35 if args.quick_test else 0.28
 
-    out_file = os.path.join(args.output_dir, "week3_results.json")
+    out_file = os.path.join(args.output_dir, "pilot_results.json")
+    # Support backward compatibility with existing week3_results.json
+    legacy_file = os.path.join(args.output_dir, "week3_results.json")
+    if not os.path.exists(out_file) and os.path.exists(legacy_file):
+        out_file = legacy_file
+
     all_results = []
     completed_keys = set()
 
@@ -566,7 +571,7 @@ def main():
         )
 
     print("\n" + "=" * 70, flush=True)
-    print(f"WEEK 3 RUN COMPLETED SUCCESSFULLY! Results saved to: {out_file}", flush=True)
+    print(f"MILESTONE 2 RUN COMPLETED SUCCESSFULLY! Results saved to: {out_file}", flush=True)
     print("=" * 70, flush=True)
 
 

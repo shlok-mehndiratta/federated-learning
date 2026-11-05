@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 from fl_outage.models.resnet import ResNet20LN
-from fl_outage.fl.trunk import FedAvgTrunk
+from fl_outage.fl.server import FederatedServer
 from fl_outage.fl.outage import OutageSimulator
 from fl_outage.fl.merge import merge_models
 from fl_outage.fl.recovery import run_recovery_evaluation
@@ -35,9 +35,9 @@ def test_smoke_end_to_end_cycle():
         3: list(range(60, 80))
     }
 
-    # 1. Initialize model & trunk
+    # 1. Initialize model & server
     model = ResNet20LN(num_classes=10, width_base=4)
-    trunk = FedAvgTrunk(
+    server = FederatedServer(
         model=model,
         dataset=train_dataset,
         partitions=partitions,
@@ -48,12 +48,12 @@ def test_smoke_end_to_end_cycle():
         checkpoint_dir="./checkpoints/test_smoke"
     )
 
-    trunk_res = trunk.run_rounds(num_rounds=2, checkpoint_at_steps=[8], seed=42)
-    assert 8 in trunk_res["checkpoints"], "Trunk failed to save checkpoint at step 8"
+    server_res = server.run_rounds(num_rounds=2, checkpoint_at_steps=[8], seed=42)
+    assert 8 in server_res["checkpoints"], "Server failed to save checkpoint at step 8"
 
-    # 2. Outage simulation from trunk model
+    # 2. Outage simulation from global model
     sim = OutageSimulator(
-        base_model=trunk.model,
+        base_model=server.model,
         dataset=train_dataset,
         partitions=partitions,
         group_A_cids=[0, 1],
@@ -66,7 +66,7 @@ def test_smoke_end_to_end_cycle():
 
     # 3. Measurement: Barrier, Distances, Curvature
     barrier_dict = compute_linear_barrier(model_A, model_B, val_loader, num_points=5)
-    dist_dict = compute_normalized_distances(model_A, model_B, model_anchor=trunk.model)
+    dist_dict = compute_normalized_distances(model_A, model_B, model_anchor=server.model)
     curv_est = compute_curvature_barrier_estimate(model_A, model_B, val_loader, num_batches=1)
 
     assert not math.isnan(barrier_dict["barrier"]), "Barrier is NaN"

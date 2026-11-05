@@ -1,11 +1,11 @@
-"""Analysis and Plotting Script for Week 3 (Gate G2: Baseline Anchors & Pilot Sweep).
+"""Analysis and Plotting Script for Milestone 2: Literature Replication & Pilot Evaluation.
 
 Loads:
-- ./runs/week3_pilot/week3_results.json
+- ./runs/pilot_evaluation/pilot_results.json (or ./runs/week3_pilot/week3_results.json)
 
 Generates:
-- ./runs/week3_pilot/anchors_v3_v4.png
-- ./runs/week3_pilot/pilot_onset_recovery.png
+- ./runs/pilot_evaluation/literature_replications.png (also saved as anchors_v3_v4.png for compatibility)
+- ./runs/pilot_evaluation/pilot_onset_recovery.png
 - Evaluates and prints Gate G2 Pre-Registration Decision Summary (Branch A vs B vs C)
   using dynamic difference-in-differences against the s=0.0 IID arm per PREREGISTRATION.md.
 """
@@ -48,7 +48,7 @@ def analyze_anchors(results: List[Dict], output_dir: str):
         return
 
     print("\n" + "=" * 80)
-    print("WEEK 3 BASELINE ANCHORS SUMMARY")
+    print("MILESTONE 2: BASELINE LITERATURE REPLICATION SUMMARY")
     print("=" * 80)
     print(f"{'Anchor':<15} | {'Condition':<22} | {'Acc Dip':<10} | {'D_pair':<10} | {'Merged Acc':<12} | {'Curvature':<10}")
     print("-" * 80)
@@ -125,10 +125,13 @@ def analyze_anchors(results: List[Dict], output_dir: str):
                  fontsize=9)
 
     plt.tight_layout()
-    out_plot = os.path.join(output_dir, "anchors_v3_v4.png")
+    out_plot = os.path.join(output_dir, "literature_replications.png")
     plt.savefig(out_plot, dpi=300)
+    # Also save with legacy filename for compatibility
+    legacy_plot = os.path.join(output_dir, "anchors_v3_v4.png")
+    plt.savefig(legacy_plot, dpi=300)
     plt.close()
-    print(f"Saved Anchors Plot to: {out_plot}")
+    print(f"Saved Replications Plot to: {out_plot}")
 
 
 def analyze_pilot(results: List[Dict], output_dir: str):
@@ -145,7 +148,7 @@ def analyze_pilot(results: List[Dict], output_dir: str):
     }
 
     print("\n" + "=" * 90)
-    print("WEEK 3 PILOT SWEEP SUMMARY (GATE G2)")
+    print("MILESTONE 2: PILOT SWEEP SUMMARY (GATE G2)")
     print("=" * 90)
     print(f"{'s':<5} | {'Onset (k)':<10} | {'Iso':<5} | {'Acc Dip':<10} | {'D_pair':<10} | {'Curvature':<10} | {'Merged Acc':<12} | {'Dyn RTB':<8}")
     print("-" * 90)
@@ -248,22 +251,32 @@ def analyze_pilot(results: List[Dict], output_dir: str):
 
         if early_dip > min_late_dip:
             print("\n--> [BRANCH A CONFIRMED (EXPECTED)]: Isolation severely hurts early merges (k=0),")
-            print("    but shared trunk pre-training (k>=1) restores mergeability!")
+            print("    but shared global model pre-training (k>=1) restores mergeability!")
             print("--> Empirical onset boundary k* exists between round 0 and round 1.")
-            print("--> PROCEED TO WEEKS 4-5 FULL FACTORIAL GRID!")
+            print("--> PROCEED TO MILESTONE 3: FULL FACTORIAL PARAMETER SWEEP!")
         else:
             print("\n--> [BRANCH B OR C DETECTED]: Review parameters before full sweep.")
     print("=" * 70)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze Week 3 Anchors & Pilot Results")
-    parser.add_argument("--json_path", type=str, default="./runs/week3_pilot/week3_results.json")
-    parser.add_argument("--output_dir", type=str, default="./runs/week3_pilot")
+    parser = argparse.ArgumentParser(description="Analyze Milestone 2 Literature Replication & Pilot Results")
+    parser.add_argument("--json_path", type=str, default="")
+    parser.add_argument("--output_dir", type=str, default="./runs/pilot_evaluation")
     args = parser.parse_args()
 
+    json_path = args.json_path
+    if not json_path:
+        for candidate in ["./runs/pilot_evaluation/pilot_results.json", "./runs/week3_pilot/week3_results.json"]:
+            if os.path.exists(candidate):
+                json_path = candidate
+                break
+
+    if not json_path or not os.path.exists(json_path):
+        raise FileNotFoundError(f"Results file not found. Checked: ./runs/pilot_evaluation/pilot_results.json and ./runs/week3_pilot/week3_results.json")
+
     os.makedirs(args.output_dir, exist_ok=True)
-    results = load_json(args.json_path)
+    results = load_json(json_path)
 
     analyze_anchors(results, args.output_dir)
     analyze_pilot(results, args.output_dir)
