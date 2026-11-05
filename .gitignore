@@ -10,14 +10,18 @@ __pycache__/
 *.so
 *.egg-info/
 
-# Experiment checkpoints & data cache
+# Experiment checkpoints & heavy caches
 checkpoints/
 data/cache/
-runs/
 *.pt
 *.pth
 *.tar
 *.ckpt
+
+# Allow tracking of experimental data, logs, and plots
+!runs/
+!runs/**
+*.log
 
 # Testing and IDE
 .pytest_cache/
@@ -32,8 +36,11 @@ wandb/
 # Reference repository (cloned external)
 external/
 
-# Documents & research PDFs
+# Documentation, plans, and private research notes (NEVER sync to GitHub)
 docs/
 *.pdf
-
+DECISION_LOG.md
+PREREGISTRATION.md
 EMPIRICAL_FINDINGS.md
+*plan*.md
+

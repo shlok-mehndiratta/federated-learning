@@ -1,0 +1,122 @@
+[
+  {
+    "onset_step": 0,
+    "onset_pct": 0.0,
+    "seed": 1,
+    "loss_barrier": 0.4270,
+    "d_pair": 0.1461,
+    "merged_acc": 0.7214
+  },
+  {
+    "onset_step": 0,
+    "onset_pct": 0.0,
+    "seed": 2,
+    "loss_barrier": 0.7440,
+    "d_pair": 0.1521,
+    "merged_acc": 0.6318
+  },
+  {
+    "onset_step": 0,
+    "onset_pct": 0.0,
+    "seed": 3,
+    "loss_barrier": 0.9643,
+    "d_pair": 0.1538,
+    "merged_acc": 0.5834
+  },
+  {
+    "onset_step": 97,
+    "onset_pct": 0.5,
+    "seed": 1,
+    "loss_barrier": 0.4599,
+    "d_pair": 0.1320,
+    "merged_acc": 0.7428
+  },
+  {
+    "onset_step": 97,
+    "onset_pct": 0.5,
+    "seed": 2,
+    "loss_barrier": 0.9455,
+    "d_pair": 0.1514,
+    "merged_acc": 0.6030
+  },
+  {
+    "onset_step": 97,
+    "onset_pct": 0.5,
+    "seed": 3,
+    "loss_barrier": 1.2213,
+    "d_pair": 0.1495,
+    "merged_acc": 0.5931
+  },
+  {
+    "onset_step": 390,
+    "onset_pct": 2.0,
+    "seed": 1,
+    "loss_barrier": 0.1458,
+    "d_pair": 0.1078,
+    "merged_acc": 0.8232
+  },
+  {
+    "onset_step": 390,
+    "onset_pct": 2.0,
+    "seed": 2,
+    "loss_barrier": 0.1863,
+    "d_pair": 0.1141,
+    "merged_acc": 0.8047
+  },
+  {
+    "onset_step": 390,
+    "onset_pct": 2.0,
+    "seed": 3,
+    "loss_barrier": 0.1202,
+    "d_pair": 0.1001,
+    "merged_acc": 0.8201
+  },
+  {
+    "onset_step": 1950,
+    "onset_pct": 10.0,
+    "seed": 1,
+    "loss_barrier": 0.0094,
+    "d_pair": 0.0545,
+    "merged_acc": 0.8552
+  },
+  {
+    "onset_step": 1950,
+    "onset_pct": 10.0,
+    "seed": 2,
+    "loss_barrier": 0.0070,
+    "d_pair": 0.0525,
+    "merged_acc": 0.8558
+  },
+  {
+    "onset_step": 1950,
+    "onset_pct": 10.0,
+    "seed": 3,
+    "loss_barrier": 0.0067,
+    "d_pair": 0.0533,
+    "merged_acc": 0.8532
+  },
+  {
+    "onset_step": 9750,
+    "onset_pct": 50.0,
+    "seed": 1,
+    "loss_barrier": 0.0000,
+    "d_pair": 0.0144,
+    "merged_acc": 0.8573
+  },
+  {
+    "onset_step": 9750,
+    "onset_pct": 50.0,
+    "seed": 2,
+    "loss_barrier": 0.0001,
+    "d_pair": 0.0136,
+    "merged_acc": 0.8515
+  },
+  {
+    "onset_step": 9750,
+    "onset_pct": 50.0,
+    "seed": 3,
+    "loss_barrier": 0.0000,
+    "d_pair": 0.0142,
+    "merged_acc": 0.8572
+  }
+]
