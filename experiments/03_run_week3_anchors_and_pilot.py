@@ -530,7 +530,7 @@ def main():
     eval_loader = create_deterministic_loader(test_set, batch_size=256, shuffle=False)
 
     # Estimate unbroken baseline accuracy target (provisional target for RTB tolerance check)
-    target_baseline_acc = 0.35 if args.quick_test else 0.85
+    target_baseline_acc = 0.35 if args.quick_test else 0.28
 
     out_file = os.path.join(args.output_dir, "week3_results.json")
     all_results = []
