@@ -16,6 +16,7 @@ class FederatedClient:
         indices: List[int],
         batch_size: int = 128,
         lr: float = 0.1,
+        momentum: float = 0.0,
         device: torch.device = torch.device("cpu")
     ):
         self.client_id = client_id
@@ -23,8 +24,14 @@ class FederatedClient:
         self.indices = indices
         self.batch_size = batch_size
         self.lr = lr
+        self.momentum = momentum
         self.device = device
         self.subset = Subset(dataset, indices)
+        self.optimizer_state: Optional[Dict] = None
+
+    def reset_momentum(self):
+        """Clears local optimizer momentum buffers upon server reconnection."""
+        self.optimizer_state = None
 
     def train_steps(
         self,
@@ -42,7 +49,12 @@ class FederatedClient:
         model.to(self.device)
         model.train()
 
-        optimizer = torch.optim.SGD(model.parameters(), lr=self.lr, momentum=0.0, weight_decay=0.0)
+        optimizer = torch.optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, weight_decay=0.0)
+        if self.optimizer_state is not None and self.momentum > 0.0:
+            try:
+                optimizer.load_state_dict(self.optimizer_state)
+            except Exception:
+                pass
         criterion = nn.CrossEntropyLoss()
 
         loader = create_deterministic_loader(
@@ -73,6 +85,9 @@ class FederatedClient:
 
             total_loss += loss.item()
             step_count += 1
+
+        if self.momentum > 0.0:
+            self.optimizer_state = optimizer.state_dict()
 
         return {
             "client_id": self.client_id,

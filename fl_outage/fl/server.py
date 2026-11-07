@@ -37,6 +37,7 @@ class FederatedServer:
         eval_loader: Optional[torch.utils.data.DataLoader] = None,
         lr: float = 0.1,
         local_steps_per_round: int = 10,
+        momentum: float = 0.0,
         device: torch.device = torch.device("cpu"),
         checkpoint_dir: str = "./checkpoints"
     ):
@@ -45,6 +46,7 @@ class FederatedServer:
         self.partitions = partitions
         self.eval_loader = eval_loader
         self.lr = lr
+        self.momentum = momentum
         self.local_steps = local_steps_per_round
         self.device = device
         self.checkpoint_dir = checkpoint_dir
@@ -56,10 +58,16 @@ class FederatedServer:
                 dataset=dataset,
                 indices=indices,
                 lr=lr,
+                momentum=momentum,
                 device=device
             )
             for cid, indices in sorted(partitions.items())
         ]
+
+    def reset_client_momentums(self):
+        """Clears momentum buffers for all clients."""
+        for client in self.clients:
+            client.reset_momentum()
 
     def save_checkpoint(self, step: int, tag: str = "") -> str:
         """Saves current global model state."""

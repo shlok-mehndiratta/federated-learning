@@ -17,6 +17,8 @@ def run_recovery_evaluation(
     recovery_tolerance: float = 0.01,
     lr: float = 0.1,
     local_steps_per_round: int = 10,
+    momentum: float = 0.0,
+    reset_momentum: bool = False,
     device: torch.device = torch.device("cpu"),
     seed: int = 42
 ) -> Dict[str, any]:
@@ -34,9 +36,13 @@ def run_recovery_evaluation(
         eval_loader=eval_loader,
         lr=lr,
         local_steps_per_round=local_steps_per_round,
+        momentum=momentum,
         device=device,
         checkpoint_dir="./checkpoints/recovery"
     )
+
+    if reset_momentum:
+        server.reset_client_momentums()
 
     # Initial accuracy immediately post-merge
     init_loss, init_acc = evaluate_loss_and_acc(merged_model, eval_loader, device=device)
