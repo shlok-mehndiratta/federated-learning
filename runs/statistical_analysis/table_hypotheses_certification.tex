@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Confirmatory Hypotheses Testing under Holm-Bonferroni Family-Wise Error Control ($\alpha=0.05$).}
+\label{tab:hypotheses_certification}
+\begin{tabular}{llccccc}
+\toprule
+\textbf{ID} & \textbf{Hypothesis Description} & \textbf{Effect ($d$)} & \textbf{Mean Diff [95\% CI]} & \textbf{Raw $p$} & \textbf{Holm $p$} & \textbf{Verdict} \\
+\midrule
+\textbf{H1} & In-Task FL vs. Generic CIFAR-100 Merged Accuracy (s=1.0) & 1.74 & +0.0576 [0.0361, 0.0771] & $0.0008$ & \textbf{0.0016} & \textsc{CONFIRMED} \\
+\textbf{H2} & Critical Onset Threshold Barrier Reduction (k=0 vs k=2, s=1.0, I0) & 1.21 & +0.0218 [0.0112, 0.0335] & $0.0066$ & \textbf{0.0066} & \textsc{CONFIRMED} \\
+\textbf{H3} & Sufficiency of Sparse Peer Coupling (I0 vs I1 dip, s>=0.8) & 0.98 & +0.0218 [0.0148, 0.0302] & $8.94 \times 10^{-6}$ & \textbf{3.58 \times 10^{-5}} & \textsc{CONFIRMED} \\
+\textbf{H4} & Curvature Incremental Predictor (Nested F-test over Distance) & 15.30 & +0.0282 [0.0282, 0.0282] & $0.0001$ & \textbf{0.0004} & \textsc{CONFIRMED} \\
+\bottomrule
+\end{tabular}
+\end{table}
