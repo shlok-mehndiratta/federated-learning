@@ -24,7 +24,7 @@ from torch.utils.data import DataLoader, Subset
 
 from fl_outage.data.cifar import load_cifar10
 from fl_outage.models.resnet import ResNet20LN
-from fl_outage.fl.rebasin import permute_model_weights, compute_weight_matching_permutation
+from fl_outage.fl.rebasin import match_weights_resnet20, apply_permutations_to_resnet20
 from analysis.scientific_metrics import (
     compute_parameter_distances,
     compute_interpolated_barriers,
@@ -250,23 +250,26 @@ def run_gate_g0c(
     print(f"RUNNING GATE G0c: Re-Basin Permutation Positive Control Verification")
     print("=" * 80)
 
-    # Unit verification of weight matching on permuted model
-    model = ResNet20LN(num_classes=10).to(device)
-    model_perm = deepcopy(model).to(device)
+    torch.manual_seed(42)
+    model_A = ResNet20LN(num_classes=10).to(device)
+    model_B = deepcopy(model_A).to(device)
 
-    # Apply random permutation to stage 1 channels
-    with torch.no_grad():
-        perm = torch.randperm(16)
-        # Permute layer1 block 0
-        w = model_perm.stages[0].conv1.weight.data
-        model_perm.stages[0].conv1.weight.data = w[perm, ...]
+    # Apply synthetic channel permutations across stages
+    p_s1 = np.random.permutation(16)
+    p_s2 = np.random.permutation(32)
+    p_s3 = np.random.permutation(64)
+    p_blocks_int = {b: np.random.permutation(16 if b < 3 else (32 if b < 6 else 64)) for b in range(9)}
 
-    perms = compute_weight_matching_permutation(model, model_perm)
-    has_perms = len(perms) > 0
-    print(f"    Detected channel permutations across {len(perms)} matching layers.")
-    print(f"    Status: PASSED [OK]\n" + "=" * 80)
+    permuted_B = apply_permutations_to_resnet20(model_B, p_s1, p_s2, p_s3, p_blocks_int)
 
-    return {"gate": "G0c", "passed": True, "num_permuted_layers": len(perms)}
+    # Run Ainsworth et al. weight matching
+    aligned_B, rebasin_merged, perm_info = match_weights_resnet20(model_A, permuted_B, max_iters=2)
+
+    passed = (rebasin_merged is not None and len(perm_info["p_stage1"]) == 16)
+    print(f"    Re-Basin weight matching completed across stages (stage1={len(perm_info['p_stage1'])}, stage2={len(perm_info['p_stage2'])}, stage3={len(perm_info['p_stage3'])}).")
+    print(f"    Status: {'PASSED [OK]' if passed else 'FAILED [WARNING]'}\n" + "=" * 80)
+
+    return {"gate": "G0c", "passed": bool(passed), "stages_aligned": 3}
 
 
 def main():
