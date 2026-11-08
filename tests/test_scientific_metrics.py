@@ -135,3 +135,40 @@ def test_scientific_partitions_invariants():
     idx_A_70, idx_B_30 = create_scientific_partition_indices(targets, source="R3-L", asymmetric_mode="ratio_70_30", seed=42)
     assert len(idx_A_70) == 700
     assert len(idx_B_30) == 300
+
+
+def test_layerwise_cka_identity(dummy_data):
+    """Verifies that layer-wise CKA on identical models yields 1.0 at every stage."""
+    from analysis.scientific_metrics import compute_layerwise_cka
+    _, loader = dummy_data
+    model = ResNet20LN(num_classes=10)
+    device = torch.device("cpu")
+
+    cka_dict = compute_layerwise_cka(model, model, loader, device)
+    for stage_name, cka_val in cka_dict.items():
+        assert abs(cka_val - 1.0) < 1e-3, f"Stage {stage_name} expected CKA=1.0, got {cka_val}"
+
+
+def test_zero_shot_logit_adjustment_uniform_invariance(dummy_data):
+    """Verifies that logit adjustment with a uniform prior is an identity operation."""
+    from analysis.scientific_metrics import evaluate_zero_shot_logit_adjustment
+    _, loader = dummy_data
+    model = ResNet20LN(num_classes=10)
+    device = torch.device("cpu")
+
+    p_uniform = np.ones(10) / 10.0
+    res = evaluate_zero_shot_logit_adjustment(model, loader, p_uniform, device, taus=[1.0])
+    assert abs(res["best_adjusted_acc"] - res["base_acc"]) < 1e-6
+    assert abs(res["gain"]) < 1e-6
+
+
+def test_decoupled_head_ensemble_identity(dummy_data):
+    """Verifies decoupled head ensemble on identical models matches naive merge."""
+    from analysis.scientific_metrics import evaluate_decoupled_head_ensemble
+    _, loader = dummy_data
+    model = ResNet20LN(num_classes=10)
+    device = torch.device("cpu")
+
+    res = evaluate_decoupled_head_ensemble(model, model, loader, device)
+    assert abs(res["decoupled_prob_ens_acc"] - res["naive_merged_acc"]) < 1e-6
+

@@ -591,3 +591,232 @@ def evaluate_cumulative_partial_merges(
 
     return results
 
+
+def extract_stage_representations(
+    model: nn.Module,
+    dataloader: DataLoader,
+    device: torch.device
+) -> Dict[str, torch.Tensor]:
+    """Extracts internal activations across ResNet-20LN stages:
+    0: init_conv (post-ReLU)
+    1: stage1 (after 3 blocks)
+    2: stage2 (after 6 blocks)
+    3: stage3 (after 9 blocks)
+    4: penultimate (global average pooled feature vector)
+    5: head (output logits)
+    """
+    model.eval()
+    acts_stage0 = []
+    acts_stage1 = []
+    acts_stage2 = []
+    acts_stage3 = []
+    acts_penultimate = []
+    acts_head = []
+
+    with torch.no_grad():
+        for x, _ in dataloader:
+            x = x.to(device)
+            out0 = model.init_act(model.init_norm(model.init_conv(x)))
+            out1 = model.stages[:3](out0)
+            out2 = model.stages[3:6](out1)
+            out3 = model.stages[6:9](out2)
+            out_pool = F.adaptive_avg_pool2d(out3, (1, 1)).flatten(1)
+            out_logits = model.fc(out_pool)
+
+            acts_stage0.append(out0.cpu())
+            acts_stage1.append(out1.cpu())
+            acts_stage2.append(out2.cpu())
+            acts_stage3.append(out3.cpu())
+            acts_penultimate.append(out_pool.cpu())
+            acts_head.append(out_logits.cpu())
+
+    return {
+        "stage0_init": torch.cat(acts_stage0, dim=0),
+        "stage1_residual": torch.cat(acts_stage1, dim=0),
+        "stage2_residual": torch.cat(acts_stage2, dim=0),
+        "stage3_residual": torch.cat(acts_stage3, dim=0),
+        "penultimate_pooled": torch.cat(acts_penultimate, dim=0),
+        "head_logits": torch.cat(acts_head, dim=0)
+    }
+
+
+def compute_layerwise_cka(
+    model_A: nn.Module,
+    model_B: nn.Module,
+    dataloader: DataLoader,
+    device: torch.device
+) -> Dict[str, float]:
+    """Computes Angular CKA across all 5 architectural depths (Hypothesis H-B1)."""
+    acts_A = extract_stage_representations(model_A, dataloader, device)
+    acts_B = extract_stage_representations(model_B, dataloader, device)
+
+    cka_dict = {}
+    for stage_name in acts_A:
+        cka_val = compute_angular_cka(acts_A[stage_name], acts_B[stage_name])
+        cka_dict[stage_name] = float(cka_val)
+
+    return cka_dict
+
+
+def evaluate_zero_shot_logit_adjustment(
+    model: nn.Module,
+    dataloader: DataLoader,
+    p_mix: np.ndarray,
+    device: torch.device,
+    taus: Optional[List[float]] = None
+) -> Dict[str, any]:
+    """Evaluates Menon et al. zero-shot logit adjustment on model outputs (Hypothesis H-B2):
+    adjusted_logits = raw_logits - tau * log(C * p_mix).
+    No raw data is shared; requires only scalar class frequencies.
+    """
+    if taus is None:
+        taus = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0]
+
+    model.eval()
+    all_logits = []
+    all_targets = []
+    with torch.no_grad():
+        for x, y in dataloader:
+            x = x.to(device)
+            out = model(x)
+            all_logits.append(out.cpu())
+            all_targets.append(y)
+
+    logits = torch.cat(all_logits, dim=0)
+    targets = torch.cat(all_targets, dim=0)
+
+    num_classes = len(p_mix)
+    p_mix_clamped = np.clip(p_mix, 1e-6, 1.0)
+    p_mix_tensor = torch.tensor(p_mix_clamped, dtype=torch.float32)
+    log_offset = torch.log(num_classes * p_mix_tensor).view(1, num_classes)
+
+    base_preds = logits.argmax(dim=1)
+    base_acc = float((base_preds == targets).float().mean().item())
+
+    best_tau = 1.0
+    best_acc = base_acc
+    tau_sweep = {}
+
+    for tau in taus:
+        adj_logits = logits - tau * log_offset
+        preds = adj_logits.argmax(dim=1)
+        acc = float((preds == targets).float().mean().item())
+        tau_sweep[f"tau_{tau:.2f}"] = float(acc)
+        if acc > best_acc:
+            best_acc = acc
+            best_tau = tau
+
+    return {
+        "base_acc": float(base_acc),
+        "best_tau": float(best_tau),
+        "best_adjusted_acc": float(best_acc),
+        "gain": float(best_acc - base_acc),
+        "tau_sweep": tau_sweep
+    }
+
+
+def evaluate_decoupled_head_ensemble(
+    model_A: nn.Module,
+    model_B: nn.Module,
+    dataloader: DataLoader,
+    device: torch.device,
+    p_A: Optional[np.ndarray] = None,
+    p_B: Optional[np.ndarray] = None,
+    tau: float = 1.0
+) -> Dict[str, float]:
+    """Evaluates Cure 3: Body-only interpolation with decoupled client classification heads.
+    1. Direct head ensembling (Softmax probability averaging).
+    2. Prior-adjusted head ensembling (Menon-calibrated Softmax probabilities).
+    """
+    model_A.eval()
+    model_B.eval()
+
+    sd_A = model_A.state_dict()
+    sd_B = model_B.state_dict()
+
+    # Create merged body dictionary
+    sd_body_merged = {}
+    for k in sd_A:
+        if not ("fc" in k or "classifier" in k):
+            if sd_A[k].dtype.is_floating_point:
+                sd_body_merged[k] = 0.5 * (sd_A[k] + sd_B[k])
+            else:
+                sd_body_merged[k] = sd_A[k]
+
+    # Model with merged body + Head A
+    model_hybrid_A = deepcopy(model_A).to(device)
+    sd_hyb_A = model_hybrid_A.state_dict()
+    for k in sd_body_merged:
+        sd_hyb_A[k] = sd_body_merged[k]
+    model_hybrid_A.load_state_dict(sd_hyb_A)
+    model_hybrid_A.eval()
+
+    # Model with merged body + Head B
+    model_hybrid_B = deepcopy(model_B).to(device)
+    sd_hyb_B = model_hybrid_B.state_dict()
+    for k in sd_body_merged:
+        sd_hyb_B[k] = sd_body_merged[k]
+    model_hybrid_B.load_state_dict(sd_hyb_B)
+    model_hybrid_B.eval()
+
+    # Full naive merged model
+    model_full_merged = deepcopy(model_A).to(device)
+    sd_full = {}
+    for k in sd_A:
+        if sd_A[k].dtype.is_floating_point:
+            sd_full[k] = 0.5 * (sd_A[k] + sd_B[k])
+        else:
+            sd_full[k] = sd_A[k]
+    model_full_merged.load_state_dict(sd_full)
+    model_full_merged.eval()
+
+    correct_naive = 0
+    correct_prob_ens = 0
+    correct_adj_prob_ens = 0
+    total = 0
+
+    has_priors = (p_A is not None and p_B is not None)
+    if has_priors:
+        num_classes = len(p_A)
+        eps = 1e-6
+        offset_A = torch.tensor(np.log(num_classes * np.clip(p_A, eps, 1.0)), dtype=torch.float32, device=device).view(1, num_classes)
+        offset_B = torch.tensor(np.log(num_classes * np.clip(p_B, eps, 1.0)), dtype=torch.float32, device=device).view(1, num_classes)
+
+    with torch.no_grad():
+        for x, y in dataloader:
+            x, y = x.to(device), y.to(device)
+            out_naive = model_full_merged(x)
+            out_A = model_hybrid_A(x)
+            out_B = model_hybrid_B(x)
+
+            pred_naive = out_naive.argmax(dim=1)
+            correct_naive += (pred_naive == y).sum().item()
+
+            prob_A = F.softmax(out_A, dim=1)
+            prob_B = F.softmax(out_B, dim=1)
+            prob_ens = 0.5 * (prob_A + prob_B)
+            pred_prob = prob_ens.argmax(dim=1)
+            correct_prob_ens += (pred_prob == y).sum().item()
+
+            if has_priors:
+                adj_out_A = out_A - tau * offset_A
+                adj_out_B = out_B - tau * offset_B
+                adj_prob_A = F.softmax(adj_out_A, dim=1)
+                adj_prob_B = F.softmax(adj_out_B, dim=1)
+                adj_prob_ens = 0.5 * (adj_prob_A + adj_prob_B)
+                pred_adj_prob = adj_prob_ens.argmax(dim=1)
+                correct_adj_prob_ens += (pred_adj_prob == y).sum().item()
+
+            total += y.size(0)
+
+    n = max(total, 1)
+    results = {
+        "naive_merged_acc": float(correct_naive / n),
+        "decoupled_prob_ens_acc": float(correct_prob_ens / n),
+    }
+    if has_priors:
+        results["decoupled_adj_prob_ens_acc"] = float(correct_adj_prob_ens / n)
+
+    return results
+
+
