@@ -14,8 +14,12 @@ from copy import deepcopy
 import json
 import math
 import os
+import sys
 import time
 from typing import Dict, List, Optional, Tuple
+
+# Ensure repository root is on sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import numpy as np
 import torch
@@ -105,7 +109,8 @@ def run_science_experiment(
     device_name: str = "cuda" if torch.cuda.is_available() else "cpu",
     output_dir: str = "./runs/science_harness",
     data_dir: str = "./data/cache",
-    save_checkpoints: bool = True
+    save_checkpoints: bool = True,
+    save_models: bool = False
 ) -> Dict[str, any]:
     """Runs a single science harness trial from trunk to branch merge."""
     device = torch.device(device_name)
@@ -114,6 +119,8 @@ def run_science_experiment(
     np.random.seed(seed)
     if device.type == "cuda":
         torch.backends.cudnn.benchmark = True
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
 
     print(f"\n" + "=" * 80)
     print(f"SCIENCE HARNESS: Source={source} | s={s} | Onset={onset_pct}% | Seed={seed} | Device={device_name}")
@@ -121,7 +128,7 @@ def run_science_experiment(
 
     # 1. Load CIFAR-10 data
     train_set, test_set = load_cifar10(root=data_dir, download=True)
-    num_workers = 4 if device.type == "cuda" else 0
+    num_workers = 2 if device.type == "cuda" else 0
     pin_memory = (device.type == "cuda")
 
     test_loader = DataLoader(test_set, batch_size=256, shuffle=False, num_workers=num_workers, pin_memory=pin_memory)
@@ -312,11 +319,24 @@ def run_science_experiment(
     # Logit-offset fidelity
     p_A = np.ones(10) / 10.0
     p_B = np.ones(10) / 10.0
-    if source == "R3-L" and asymmetric_mode is None:
+    if source == "R3-L":
         from fl_outage.data.partition import compute_group_class_proportions
-        p_A, p_B = compute_group_class_proportions(num_classes=10, s=s)
+        if asymmetric_mode == "A_skew_B_iid":
+            p_A, _ = compute_group_class_proportions(num_classes=10, s=s)
+            p_B = np.ones(10) / 10.0
+        elif asymmetric_mode is None:
+            p_A, p_B = compute_group_class_proportions(num_classes=10, s=s)
     logit_fidelity = compute_logit_offset_fidelity(model_A, model_B, test_loader, p_A, p_B, device)
     print(f"    Logit-Offset Fidelity (H-B2): Slope={logit_fidelity['slope']:.3f} | R2={logit_fidelity['r2']:.3f}")
+
+    # Optional: save branch endpoint weights for rapid Stage 2 head cures
+    if save_models:
+        model_name_base = f"model_{source}_s{s}_onset{onset_pct}_seed{seed}" if not asymmetric_mode else f"model_{source}_{asymmetric_mode}_onset{onset_pct}_seed{seed}"
+        path_A = os.path.join(output_dir, f"{model_name_base}_branchA.pt")
+        path_B = os.path.join(output_dir, f"{model_name_base}_branchB.pt")
+        torch.save(model_A.state_dict(), path_A)
+        torch.save(model_B.state_dict(), path_B)
+        print(f"    Saved branch models to {path_A} and {path_B}")
 
     # Compile master result
     record = {
@@ -375,7 +395,9 @@ def main():
     parser.add_argument("--asymmetric_mode", type=str, default=None, choices=[None, "A_skew_B_iid", "ratio_70_30"])
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument("--data_dir", type=str, default="./data/cache", help="Persistent dataset cache directory")
     parser.add_argument("--output_dir", type=str, default="./runs/science_harness")
+    parser.add_argument("--save_models", action="store_true", help="Save final branch model state dicts (.pt)")
     args = parser.parse_args()
 
     run_science_experiment(
@@ -386,7 +408,9 @@ def main():
         asymmetric_mode=args.asymmetric_mode,
         seed=args.seed,
         device_name=args.device,
-        output_dir=args.output_dir
+        output_dir=args.output_dir,
+        data_dir=args.data_dir,
+        save_models=args.save_models
     )
 
 
