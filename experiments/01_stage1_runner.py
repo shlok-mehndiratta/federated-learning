@@ -123,6 +123,7 @@ def main():
                 seed=seed,
                 device_name=args.device,
                 output_dir=args.output_dir,
+                data_dir=args.data_dir,
                 save_checkpoints=True
             )
             elapsed = time.time() - t0

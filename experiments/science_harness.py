@@ -104,6 +104,7 @@ def run_science_experiment(
     seed: int = 42,
     device_name: str = "cuda" if torch.cuda.is_available() else "cpu",
     output_dir: str = "./runs/science_harness",
+    data_dir: str = "./data/cache",
     save_checkpoints: bool = True
 ) -> Dict[str, any]:
     """Runs a single science harness trial from trunk to branch merge."""
@@ -111,14 +112,19 @@ def run_science_experiment(
     os.makedirs(output_dir, exist_ok=True)
     torch.manual_seed(seed)
     np.random.seed(seed)
+    if device.type == "cuda":
+        torch.backends.cudnn.benchmark = True
 
     print(f"\n" + "=" * 80)
     print(f"SCIENCE HARNESS: Source={source} | s={s} | Onset={onset_pct}% | Seed={seed} | Device={device_name}")
     print("=" * 80)
 
     # 1. Load CIFAR-10 data
-    train_set, test_set = load_cifar10(root="./data/cache", download=True)
-    test_loader = DataLoader(test_set, batch_size=256, shuffle=False)
+    train_set, test_set = load_cifar10(root=data_dir, download=True)
+    num_workers = 4 if device.type == "cuda" else 0
+    pin_memory = (device.type == "cuda")
+
+    test_loader = DataLoader(test_set, batch_size=256, shuffle=False, num_workers=num_workers, pin_memory=pin_memory)
     probe_loader = build_probe_set(test_set, num_samples=1000, seed=42)
 
     # 2. Partitions for branches
@@ -130,11 +136,11 @@ def run_science_experiment(
         seed=seed
     )
 
-    loader_trunk = DataLoader(train_set, batch_size=128, shuffle=True)
-    loader_A = DataLoader(subset_A, batch_size=128, shuffle=True)
+    loader_trunk = DataLoader(train_set, batch_size=128, shuffle=True, num_workers=num_workers, pin_memory=pin_memory)
+    loader_A = DataLoader(subset_A, batch_size=128, shuffle=True, num_workers=num_workers, pin_memory=pin_memory)
     # If R2a, use a different generator seed for branch B DataLoader shuffle
     gen_B = torch.Generator().manual_seed(seed + 1000 if source == "R2a" else seed)
-    loader_B = DataLoader(subset_B, batch_size=128, shuffle=True, generator=gen_B)
+    loader_B = DataLoader(subset_B, batch_size=128, shuffle=True, generator=gen_B, num_workers=num_workers, pin_memory=pin_memory)
 
     # Few-shot loader (200 balanced samples: 20 per class)
     few_shot_indices = []
@@ -212,7 +218,9 @@ def run_science_experiment(
 
     # Save checkpoints every 1% of branch steps for Matched Design
     ckpt_interval = max(1, int(0.01 * branch_steps))
+    log_interval = max(500, branch_steps // 10)
     trajectory_ckpts = []
+    start_branch_time = time.time()
 
     print(f"--> Training branches for {branch_steps} steps (Checkpointing every {ckpt_interval} steps)...")
     for b_step in range(branch_steps):
@@ -251,6 +259,10 @@ def run_science_experiment(
                 "d_pair": dists["d_pair"],
                 "d_origin": dists.get("d_origin", 0.0)
             })
+
+        if (b_step + 1) % log_interval == 0 or (b_step + 1) == branch_steps:
+            elapsed_b = time.time() - start_branch_time
+            print(f"    Branch Step {b_step + 1:5d}/{branch_steps} | Loss A: {lossA.item():.4f} | Loss B: {lossB.item():.4f} | Elapsed: {elapsed_b:.1f}s")
 
     # 7. Endpoint Measurements
     print("\n--> Evaluating endpoints and merge barrier metrics...")
