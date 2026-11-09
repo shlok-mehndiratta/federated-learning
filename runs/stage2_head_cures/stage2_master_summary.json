@@ -1,0 +1,878 @@
+[
+  {
+    "config": {
+      "source": "R2b",
+      "s": 0.0,
+      "asymmetric_mode": null,
+      "onset_pct": 2.0,
+      "seed": 42
+    },
+    "endpoints": {
+      "acc_A": 0.8435,
+      "loss_A": 0.7181729497909546,
+      "acc_B": 0.8418,
+      "loss_B": 0.7245728658676147,
+      "acc_naive_merged": 0.7362,
+      "loss_naive_merged": 1.2045761499404908,
+      "acc_dip": 0.10730000000000006
+    },
+    "distances": {
+      "d_pair": 0.25634680475672383,
+      "d_body": 0.25390709476014944,
+      "d_head": 0.765707170517484,
+      "raw_l2": 133.8105766313169,
+      "num_params": 272474,
+      "num_body_params": 271824,
+      "num_head_params": 650
+    },
+    "curvature": {
+      "curvature_total": -522.1216201782842,
+      "curvature_body": -246.52576446548835,
+      "curvature_head": -273.8788604736975
+    },
+    "layerwise_cka": {
+      "stage0_init": 0.8484157207792911,
+      "stage1_residual": 0.7935278924397859,
+      "stage2_residual": 0.7905471217585978,
+      "stage3_residual": 0.5848397760110484,
+      "penultimate_pooled": 0.62523472453483,
+      "head_logits": 0.6959142222517485
+    },
+    "cure1_zero_shot_logit_adj": {
+      "best_acc": 0.7361999750137329,
+      "best_tau": 1.0,
+      "gain": 0.0,
+      "recovery_ratio": -6.406733607088169e-07,
+      "tau_sweep": {
+        "tau_0.25": 0.7361999750137329,
+        "tau_0.50": 0.7361999750137329,
+        "tau_0.75": 0.7361999750137329,
+        "tau_1.00": 0.7361999750137329,
+        "tau_1.25": 0.7361999750137329,
+        "tau_1.50": 0.7361999750137329,
+        "tau_2.00": 0.7361999750137329,
+        "tau_3.00": 0.7361999750137329
+      }
+    },
+    "cure2_few_shot_recalibration": {
+      "acc": 0.7477,
+      "gain": 0.011500000000000066,
+      "recovery_ratio": 0.2948717242083711,
+      "target_passed": false
+    },
+    "cure3_decoupled_head_ensemble": {
+      "prob_ens_acc": 0.7342,
+      "prior_adj_prob_ens_acc": 0.7342,
+      "recovery_ratio": -0.051282038992759946
+    },
+    "cure4_linear_probe_upper_bound": {
+      "probe_acc": 0.7752000093460083,
+      "probe_gap": 0.039000009346008335,
+      "head_share": 0.2869757862105102
+    },
+    "elapsed_seconds": 28.763064861297607
+  },
+  {
+    "config": {
+      "source": "R2b",
+      "s": 0.0,
+      "asymmetric_mode": null,
+      "onset_pct": 10.0,
+      "seed": 42
+    },
+    "endpoints": {
+      "acc_A": 0.8387,
+      "loss_A": 0.7379995535850525,
+      "acc_B": 0.8338,
+      "loss_B": 0.7633471703529358,
+      "acc_naive_merged": 0.836,
+      "loss_naive_merged": 0.8479935892105103,
+      "acc_dip": 0.0027000000000000357
+    },
+    "distances": {
+      "d_pair": 0.2082981704413791,
+      "d_body": 0.20727893381636248,
+      "d_head": 0.4695974654581419,
+      "raw_l2": 108.7296497588905,
+      "num_params": 272474,
+      "num_body_params": 271824,
+      "num_head_params": 650
+    },
+    "curvature": {
+      "curvature_total": 96.52481079092112,
+      "curvature_body": 113.8355255126955,
+      "curvature_head": -17.23346710202911
+    },
+    "layerwise_cka": {
+      "stage0_init": 0.9185606627608945,
+      "stage1_residual": 0.8930671092970625,
+      "stage2_residual": 0.8268768337024014,
+      "stage3_residual": 0.5923349900178387,
+      "penultimate_pooled": 0.6482452865570363,
+      "head_logits": 0.7209796148716923
+    },
+    "cure1_zero_shot_logit_adj": {
+      "best_acc": 0.8360000252723694,
+      "best_tau": 1.0,
+      "gain": 0.0,
+      "recovery_ratio": 0.025272369419404583,
+      "tau_sweep": {
+        "tau_0.25": 0.8360000252723694,
+        "tau_0.50": 0.8360000252723694,
+        "tau_0.75": 0.8360000252723694,
+        "tau_1.00": 0.8360000252723694,
+        "tau_1.25": 0.8360000252723694,
+        "tau_1.50": 0.8360000252723694,
+        "tau_2.00": 0.8360000252723694,
+        "tau_3.00": 0.8360000252723694
+      }
+    },
+    "cure2_few_shot_recalibration": {
+      "acc": 0.8309,
+      "gain": -0.005099999999999993,
+      "recovery_ratio": -5099.999999999994,
+      "target_passed": false
+    },
+    "cure3_decoupled_head_ensemble": {
+      "prob_ens_acc": 0.8361,
+      "prior_adj_prob_ens_acc": 0.8361,
+      "recovery_ratio": 99.99999999998899
+    },
+    "cure4_linear_probe_upper_bound": {
+      "probe_acc": 0.8343999981880188,
+      "probe_gap": -0.0016000018119811665,
+      "head_share": 0.0
+    },
+    "elapsed_seconds": 28.64869737625122
+  },
+  {
+    "config": {
+      "source": "R2b",
+      "s": 0.0,
+      "asymmetric_mode": null,
+      "onset_pct": 25.0,
+      "seed": 42
+    },
+    "endpoints": {
+      "acc_A": 0.8425,
+      "loss_A": 0.6826991662979126,
+      "acc_B": 0.843,
+      "loss_B": 0.7052066309928894,
+      "acc_naive_merged": 0.8554,
+      "loss_naive_merged": 0.724566535949707,
+      "acc_dip": 0.0
+    },
+    "distances": {
+      "d_pair": 0.17560858916244818,
+      "d_body": 0.17511475320975375,
+      "d_head": 0.3213548388789385,
+      "raw_l2": 91.66600145275605,
+      "num_params": 272474,
+      "num_body_params": 271824,
+      "num_head_params": 650
+    },
+    "curvature": {
+      "curvature_total": -17.92230606068035,
+      "curvature_body": -44.55852508533642,
+      "curvature_head": 26.69811248789955
+    },
+    "layerwise_cka": {
+      "stage0_init": 0.9502319839494692,
+      "stage1_residual": 0.9240060794686715,
+      "stage2_residual": 0.8463125490690746,
+      "stage3_residual": 0.6236316027714216,
+      "penultimate_pooled": 0.6703860836349702,
+      "head_logits": 0.7262138394397724
+    },
+    "cure1_zero_shot_logit_adj": {
+      "best_acc": 0.855400025844574,
+      "best_tau": 1.0,
+      "gain": 0.0,
+      "recovery_ratio": 0.02584457392540429,
+      "tau_sweep": {
+        "tau_0.25": 0.855400025844574,
+        "tau_0.50": 0.855400025844574,
+        "tau_0.75": 0.855400025844574,
+        "tau_1.00": 0.855400025844574,
+        "tau_1.25": 0.855400025844574,
+        "tau_1.50": 0.855400025844574,
+        "tau_2.00": 0.855400025844574,
+        "tau_3.00": 0.855400025844574
+      }
+    },
+    "cure2_few_shot_recalibration": {
+      "acc": 0.8507,
+      "gain": -0.0047000000000000375,
+      "recovery_ratio": -4700.000000000037,
+      "target_passed": true
+    },
+    "cure3_decoupled_head_ensemble": {
+      "prob_ens_acc": 0.8554,
+      "prior_adj_prob_ens_acc": 0.8554,
+      "recovery_ratio": 0.0
+    },
+    "cure4_linear_probe_upper_bound": {
+      "probe_acc": 0.8537999987602234,
+      "probe_gap": -0.0016000012397766605,
+      "head_share": 0.0
+    },
+    "elapsed_seconds": 28.683080673217773
+  },
+  {
+    "config": {
+      "source": "R3-L",
+      "s": 0.8,
+      "asymmetric_mode": null,
+      "onset_pct": 2.0,
+      "seed": 42
+    },
+    "endpoints": {
+      "acc_A": 0.7749,
+      "loss_A": 1.2349418298721313,
+      "acc_B": 0.7482,
+      "loss_B": 1.4185312992095946,
+      "acc_naive_merged": 0.5439,
+      "loss_naive_merged": 1.761849486541748,
+      "acc_dip": 0.23099999999999998
+    },
+    "distances": {
+      "d_pair": 0.2551002869879438,
+      "d_body": 0.25024322384863407,
+      "d_head": 1.0447579951721098,
+      "raw_l2": 133.15990629594864,
+      "num_params": 272474,
+      "num_body_params": 271824,
+      "num_head_params": 650
+    },
+    "curvature": {
+      "curvature_total": -269.69261169407235,
+      "curvature_body": -358.18367004392115,
+      "curvature_head": 94.50721740722479
+    },
+    "layerwise_cka": {
+      "stage0_init": 0.8331371018543242,
+      "stage1_residual": 0.7637288265394037,
+      "stage2_residual": 0.7524070579965221,
+      "stage3_residual": 0.5198554454152289,
+      "penultimate_pooled": 0.5756529529329917,
+      "head_logits": 0.6524639599043598
+    },
+    "cure1_zero_shot_logit_adj": {
+      "best_acc": 0.5439000129699707,
+      "best_tau": 1.0,
+      "gain": 0.0,
+      "recovery_ratio": 1.4573000796205988e-07,
+      "tau_sweep": {
+        "tau_0.25": 0.5439000129699707,
+        "tau_0.50": 0.5439000129699707,
+        "tau_0.75": 0.5439000129699707,
+        "tau_1.00": 0.5439000129699707,
+        "tau_1.25": 0.5439000129699707,
+        "tau_1.50": 0.5439000129699707,
+        "tau_2.00": 0.5439000129699707,
+        "tau_3.00": 0.5439000129699707
+      }
+    },
+    "cure2_few_shot_recalibration": {
+      "acc": 0.574,
+      "gain": 0.030099999999999905,
+      "recovery_ratio": 0.33820224864060494,
+      "target_passed": false
+    },
+    "cure3_decoupled_head_ensemble": {
+      "prob_ens_acc": 0.5414,
+      "prior_adj_prob_ens_acc": 0.5404,
+      "recovery_ratio": -0.028089887760848326
+    },
+    "cure4_linear_probe_upper_bound": {
+      "probe_acc": 0.6328999996185303,
+      "probe_gap": 0.08899999961853022,
+      "head_share": 0.27117611096444316
+    },
+    "elapsed_seconds": 28.60453176498413
+  },
+  {
+    "config": {
+      "source": "R3-L",
+      "s": 0.8,
+      "asymmetric_mode": null,
+      "onset_pct": 10.0,
+      "seed": 42
+    },
+    "endpoints": {
+      "acc_A": 0.7627,
+      "loss_A": 1.2765937953948974,
+      "acc_B": 0.7364,
+      "loss_B": 1.4979615551948546,
+      "acc_naive_merged": 0.7798,
+      "loss_naive_merged": 1.1972184034347535,
+      "acc_dip": 0.0
+    },
+    "distances": {
+      "d_pair": 0.20461619668012931,
+      "d_body": 0.20280375879630672,
+      "d_head": 0.592173641500252,
+      "raw_l2": 106.80769472378961,
+      "num_params": 272474,
+      "num_body_params": 271824,
+      "num_head_params": 650
+    },
+    "curvature": {
+      "curvature_total": 293.35861206036816,
+      "curvature_body": 129.9276351927059,
+      "curvature_head": 162.47997283924676
+    },
+    "layerwise_cka": {
+      "stage0_init": 0.8885390619879028,
+      "stage1_residual": 0.8550276743108796,
+      "stage2_residual": 0.8055397466299888,
+      "stage3_residual": 0.5511459665780136,
+      "penultimate_pooled": 0.5971566226990954,
+      "head_logits": 0.6659588858033137
+    },
+    "cure1_zero_shot_logit_adj": {
+      "best_acc": 0.7797999978065491,
+      "best_tau": 1.0,
+      "gain": 0.0,
+      "recovery_ratio": -1.4336305555062e-07,
+      "tau_sweep": {
+        "tau_0.25": 0.7797999978065491,
+        "tau_0.50": 0.7797999978065491,
+        "tau_0.75": 0.7797999978065491,
+        "tau_1.00": 0.7797999978065491,
+        "tau_1.25": 0.7797999978065491,
+        "tau_1.50": 0.7797999978065491,
+        "tau_2.00": 0.7797999978065491,
+        "tau_3.00": 0.7797999978065491
+      }
+    },
+    "cure2_few_shot_recalibration": {
+      "acc": 0.7761,
+      "gain": -0.0037000000000000366,
+      "recovery_ratio": -0.2418304813934362,
+      "target_passed": true
+    },
+    "cure3_decoupled_head_ensemble": {
+      "prob_ens_acc": 0.777,
+      "prior_adj_prob_ens_acc": 0.779,
+      "recovery_ratio": -0.18300685078422177
+    },
+    "cure4_linear_probe_upper_bound": {
+      "probe_acc": 0.7950999736785889,
+      "probe_gap": 0.015299973678588819,
+      "head_share": 0.1657635284787522
+    },
+    "elapsed_seconds": 28.724526405334473
+  },
+  {
+    "config": {
+      "source": "R3-L",
+      "s": 0.8,
+      "asymmetric_mode": null,
+      "onset_pct": 25.0,
+      "seed": 42
+    },
+    "endpoints": {
+      "acc_A": 0.7813,
+      "loss_A": 1.1716900762557982,
+      "acc_B": 0.7612,
+      "loss_B": 1.3607861545562745,
+      "acc_naive_merged": 0.8367,
+      "loss_naive_merged": 0.8283884956359864,
+      "acc_dip": 0.0
+    },
+    "distances": {
+      "d_pair": 0.1643051596676347,
+      "d_body": 0.16350101133127046,
+      "d_head": 0.3704500967288315,
+      "raw_l2": 85.76571952785426,
+      "num_params": 272474,
+      "num_body_params": 271824,
+      "num_head_params": 650
+    },
+    "curvature": {
+      "curvature_total": 26.844978332385416,
+      "curvature_body": -27.723789215228223,
+      "curvature_head": 52.922248840236996
+    },
+    "layerwise_cka": {
+      "stage0_init": 0.9329660055566732,
+      "stage1_residual": 0.9114965717960697,
+      "stage2_residual": 0.8429381454062546,
+      "stage3_residual": 0.5787670198912702,
+      "penultimate_pooled": 0.6226507243388859,
+      "head_logits": 0.7032913849677609
+    },
+    "cure1_zero_shot_logit_adj": {
+      "best_acc": 0.8367000222206116,
+      "best_tau": 1.0,
+      "gain": 0.0,
+      "recovery_ratio": 3.3667670156975807e-06,
+      "tau_sweep": {
+        "tau_0.25": 0.8367000222206116,
+        "tau_0.50": 0.8367000222206116,
+        "tau_0.75": 0.8367000222206116,
+        "tau_1.00": 0.8367000222206116,
+        "tau_1.25": 0.8367000222206116,
+        "tau_1.50": 0.8367000222206116,
+        "tau_2.00": 0.8367000222206116,
+        "tau_3.00": 0.8367000222206116
+      }
+    },
+    "cure2_few_shot_recalibration": {
+      "acc": 0.8339,
+      "gain": -0.0028000000000000247,
+      "recovery_ratio": -0.4242433928064335,
+      "target_passed": true
+    },
+    "cure3_decoupled_head_ensemble": {
+      "prob_ens_acc": 0.8367,
+      "prior_adj_prob_ens_acc": 0.8369,
+      "recovery_ratio": 0.0
+    },
+    "cure4_linear_probe_upper_bound": {
+      "probe_acc": 0.8432999849319458,
+      "probe_gap": 0.0065999849319458015,
+      "head_share": 0.18644025231485323
+    },
+    "elapsed_seconds": 28.21618628501892
+  },
+  {
+    "config": {
+      "source": "R3-L",
+      "s": 1.0,
+      "asymmetric_mode": null,
+      "onset_pct": 2.0,
+      "seed": 42
+    },
+    "endpoints": {
+      "acc_A": 0.4551,
+      "loss_A": 12.76893575744629,
+      "acc_B": 0.4732,
+      "loss_B": 11.092095669555665,
+      "acc_naive_merged": 0.402,
+      "loss_naive_merged": 1.6782241233825683,
+      "acc_dip": 0.07119999999999999
+    },
+    "distances": {
+      "d_pair": 0.22883146025502332,
+      "d_body": 0.2226406511936863,
+      "d_head": 1.105078135621448,
+      "raw_l2": 119.44783036078705,
+      "num_params": 272474,
+      "num_body_params": 271824,
+      "num_head_params": 650
+    },
+    "curvature": {
+      "curvature_total": 382.5424194336957,
+      "curvature_body": 57.608985901014265,
+      "curvature_head": 271.11072540297874
+    },
+    "layerwise_cka": {
+      "stage0_init": 0.8197058289689149,
+      "stage1_residual": 0.7370567226667225,
+      "stage2_residual": 0.7460198825105304,
+      "stage3_residual": 0.35011850719702964,
+      "penultimate_pooled": 0.38556776211563304,
+      "head_logits": 0.42673835497893353
+    },
+    "cure1_zero_shot_logit_adj": {
+      "best_acc": 0.4020000100135803,
+      "best_tau": 1.0,
+      "gain": 0.0,
+      "recovery_ratio": 6.07251630979816e-08,
+      "tau_sweep": {
+        "tau_0.25": 0.4020000100135803,
+        "tau_0.50": 0.4020000100135803,
+        "tau_0.75": 0.4020000100135803,
+        "tau_1.00": 0.4020000100135803,
+        "tau_1.25": 0.4020000100135803,
+        "tau_1.50": 0.4020000100135803,
+        "tau_2.00": 0.4020000100135803,
+        "tau_3.00": 0.4020000100135803
+      }
+    },
+    "cure2_few_shot_recalibration": {
+      "acc": 0.471,
+      "gain": 0.06899999999999995,
+      "recovery_ratio": 0.4184353776519298,
+      "target_passed": true
+    },
+    "cure3_decoupled_head_ensemble": {
+      "prob_ens_acc": 0.4058,
+      "prior_adj_prob_ens_acc": 0.4036,
+      "recovery_ratio": 0.02304426717503365
+    },
+    "cure4_linear_probe_upper_bound": {
+      "probe_acc": 0.5669000148773193,
+      "probe_gap": 0.1649000148773193,
+      "head_share": 0.3507764621938297
+    },
+    "elapsed_seconds": 28.458537340164185
+  },
+  {
+    "config": {
+      "source": "R3-L",
+      "s": 1.0,
+      "asymmetric_mode": null,
+      "onset_pct": 10.0,
+      "seed": 42
+    },
+    "endpoints": {
+      "acc_A": 0.4554,
+      "loss_A": 11.325524049377442,
+      "acc_B": 0.4753,
+      "loss_B": 10.096476187133788,
+      "acc_naive_merged": 0.6187,
+      "loss_naive_merged": 1.355832063293457,
+      "acc_dip": 0.0
+    },
+    "distances": {
+      "d_pair": 0.18808546030262327,
+      "d_body": 0.1837869860495581,
+      "d_head": 0.838956167414737,
+      "raw_l2": 98.17880867657098,
+      "num_params": 272474,
+      "num_body_params": 271824,
+      "num_head_params": 650
+    },
+    "curvature": {
+      "curvature_total": -253.5770416260963,
+      "curvature_body": -90.04898071296452,
+      "curvature_head": -249.03068542481145
+    },
+    "layerwise_cka": {
+      "stage0_init": 0.7996748996851969,
+      "stage1_residual": 0.8403060740622063,
+      "stage2_residual": 0.7642376293574276,
+      "stage3_residual": 0.40040153008094725,
+      "penultimate_pooled": 0.4221571427118135,
+      "head_logits": 0.45851584846889715
+    },
+    "cure1_zero_shot_logit_adj": {
+      "best_acc": 0.6187000274658203,
+      "best_tau": 1.0,
+      "gain": 0.0,
+      "recovery_ratio": 2.7912412117351427e-07,
+      "tau_sweep": {
+        "tau_0.25": 0.6187000274658203,
+        "tau_0.50": 0.6187000274658203,
+        "tau_0.75": 0.6187000274658203,
+        "tau_1.00": 0.6187000274658203,
+        "tau_1.25": 0.6187000274658203,
+        "tau_1.50": 0.6187000274658203,
+        "tau_2.00": 0.6187000274658203,
+        "tau_3.00": 0.6187000274658203
+      }
+    },
+    "cure2_few_shot_recalibration": {
+      "acc": 0.669,
+      "gain": 0.05030000000000001,
+      "recovery_ratio": 0.5111787359507116,
+      "target_passed": true
+    },
+    "cure3_decoupled_head_ensemble": {
+      "prob_ens_acc": 0.5631,
+      "prior_adj_prob_ens_acc": 0.6093,
+      "recovery_ratio": -0.565040511309335
+    },
+    "cure4_linear_probe_upper_bound": {
+      "probe_acc": 0.7171000242233276,
+      "probe_gap": 0.09840002422332761,
+      "head_share": 0.3883189590502274
+    },
+    "elapsed_seconds": 28.13004159927368
+  },
+  {
+    "config": {
+      "source": "R3-L",
+      "s": 1.0,
+      "asymmetric_mode": null,
+      "onset_pct": 25.0,
+      "seed": 42
+    },
+    "endpoints": {
+      "acc_A": 0.4552,
+      "loss_A": 9.56001382446289,
+      "acc_B": 0.4777,
+      "loss_B": 8.227485551452636,
+      "acc_naive_merged": 0.7832,
+      "loss_naive_merged": 0.7355091468811035,
+      "acc_dip": 0.0
+    },
+    "distances": {
+      "d_pair": 0.14890290068440348,
+      "d_body": 0.1459998304317602,
+      "d_head": 0.6165995090051025,
+      "raw_l2": 77.72588787117748,
+      "num_params": 272474,
+      "num_body_params": 271824,
+      "num_head_params": 650
+    },
+    "curvature": {
+      "curvature_total": 84.13925170902559,
+      "curvature_body": -4.208564758245714,
+      "curvature_head": 36.751365661724655
+    },
+    "layerwise_cka": {
+      "stage0_init": 0.8744754444235674,
+      "stage1_residual": 0.8885338339360168,
+      "stage2_residual": 0.8093737139624052,
+      "stage3_residual": 0.4331656736859575,
+      "penultimate_pooled": 0.46310511130088783,
+      "head_logits": 0.5271860761322993
+    },
+    "cure1_zero_shot_logit_adj": {
+      "best_acc": 0.7832000255584717,
+      "best_tau": 1.0,
+      "gain": 0.0,
+      "recovery_ratio": 9.86814635459762e-07,
+      "tau_sweep": {
+        "tau_0.25": 0.7832000255584717,
+        "tau_0.50": 0.7832000255584717,
+        "tau_0.75": 0.7832000255584717,
+        "tau_1.00": 0.7832000255584717,
+        "tau_1.25": 0.7832000255584717,
+        "tau_1.50": 0.7832000255584717,
+        "tau_2.00": 0.7832000255584717,
+        "tau_3.00": 0.7832000255584717
+      }
+    },
+    "cure2_few_shot_recalibration": {
+      "acc": 0.7944,
+      "gain": 0.011199999999999988,
+      "recovery_ratio": 0.4324328957854922,
+      "target_passed": true
+    },
+    "cure3_decoupled_head_ensemble": {
+      "prob_ens_acc": 0.7203,
+      "prior_adj_prob_ens_acc": 0.7798,
+      "recovery_ratio": -2.4285740307953096
+    },
+    "cure4_linear_probe_upper_bound": {
+      "probe_acc": 0.8090999722480774,
+      "probe_gap": 0.025899972248077385,
+      "head_share": 0.2913382705070573
+    },
+    "elapsed_seconds": 28.678061723709106
+  },
+  {
+    "config": {
+      "source": "R3-L",
+      "s": 0.8,
+      "asymmetric_mode": "A_skew_B_iid",
+      "onset_pct": 2.0,
+      "seed": 42
+    },
+    "endpoints": {
+      "acc_A": 0.7679,
+      "loss_A": 1.2866512607574463,
+      "acc_B": 0.7403,
+      "loss_B": 1.447415128135681,
+      "acc_naive_merged": 0.5259,
+      "loss_naive_merged": 2.2354712623596193,
+      "acc_dip": 0.242
+    },
+    "distances": {
+      "d_pair": 0.2595324167062762,
+      "d_body": 0.2547846147703025,
+      "d_head": 1.0433248900853676,
+      "raw_l2": 135.47343555517887,
+      "num_params": 272474,
+      "num_body_params": 271824,
+      "num_head_params": 650
+    },
+    "curvature": {
+      "curvature_total": -1382.0796966554917,
+      "curvature_body": -88.53530883801142,
+      "curvature_head": -1293.7366485599177
+    },
+    "layerwise_cka": {
+      "stage0_init": 0.8396898048138577,
+      "stage1_residual": 0.76659674348372,
+      "stage2_residual": 0.747406081250581,
+      "stage3_residual": 0.5124779095824086,
+      "penultimate_pooled": 0.5709089932887507,
+      "head_logits": 0.6337370454661859
+    },
+    "cure1_zero_shot_logit_adj": {
+      "best_acc": 0.527999997138977,
+      "best_tau": 0.5,
+      "gain": 0.0020999908447265625,
+      "recovery_ratio": 0.019848748107198045,
+      "tau_sweep": {
+        "tau_0.25": 0.5266000032424927,
+        "tau_0.50": 0.527999997138977,
+        "tau_0.75": 0.5275999903678894,
+        "tau_1.00": 0.5252000093460083,
+        "tau_1.25": 0.5246000289916992,
+        "tau_1.50": 0.5231999754905701,
+        "tau_2.00": 0.5164999961853027,
+        "tau_3.00": 0.5011000037193298
+      }
+    },
+    "cure2_few_shot_recalibration": {
+      "acc": 0.582,
+      "gain": 0.05609999999999993,
+      "recovery_ratio": 0.5302458504092256,
+      "target_passed": false
+    },
+    "cure3_decoupled_head_ensemble": {
+      "prob_ens_acc": 0.5284,
+      "prior_adj_prob_ens_acc": 0.5262,
+      "recovery_ratio": 0.02362949422500958
+    },
+    "cure4_linear_probe_upper_bound": {
+      "probe_acc": 0.6316999793052673,
+      "probe_gap": 0.1057999793052673,
+      "head_share": 0.3056036375079934
+    },
+    "elapsed_seconds": 28.68270444869995
+  },
+  {
+    "config": {
+      "source": "R3-L",
+      "s": 0.8,
+      "asymmetric_mode": "A_skew_B_iid",
+      "onset_pct": 10.0,
+      "seed": 42
+    },
+    "endpoints": {
+      "acc_A": 0.76,
+      "loss_A": 1.3413671661376954,
+      "acc_B": 0.7436,
+      "loss_B": 1.4537388851165771,
+      "acc_naive_merged": 0.7707,
+      "loss_naive_merged": 1.2567693698883056,
+      "acc_dip": 0.0
+    },
+    "distances": {
+      "d_pair": 0.2039486555989588,
+      "d_body": 0.2023821270911422,
+      "d_head": 0.554784195594007,
+      "raw_l2": 106.45924467354892,
+      "num_params": 272474,
+      "num_body_params": 271824,
+      "num_head_params": 650
+    },
+    "curvature": {
+      "curvature_total": -258.6616516111473,
+      "curvature_body": -160.5316162107684,
+      "curvature_head": -99.61700439431453
+    },
+    "layerwise_cka": {
+      "stage0_init": 0.8896538241427128,
+      "stage1_residual": 0.8652180842495121,
+      "stage2_residual": 0.8298435914341393,
+      "stage3_residual": 0.5545681958441995,
+      "penultimate_pooled": 0.6085743098560548,
+      "head_logits": 0.658031399766051
+    },
+    "cure1_zero_shot_logit_adj": {
+      "best_acc": 0.7736999988555908,
+      "best_tau": 2.0,
+      "gain": 0.003000020980834961,
+      "recovery_ratio": 0.12195113895198202,
+      "tau_sweep": {
+        "tau_0.25": 0.7706999778747559,
+        "tau_0.50": 0.7712000012397766,
+        "tau_0.75": 0.7705000042915344,
+        "tau_1.00": 0.7716000080108643,
+        "tau_1.25": 0.7717999815940857,
+        "tau_1.50": 0.7728000283241272,
+        "tau_2.00": 0.7736999988555908,
+        "tau_3.00": 0.7721999883651733
+      }
+    },
+    "cure2_few_shot_recalibration": {
+      "acc": 0.7759,
+      "gain": 0.005199999999999982,
+      "recovery_ratio": 0.21138205481929306,
+      "target_passed": true
+    },
+    "cure3_decoupled_head_ensemble": {
+      "prob_ens_acc": 0.7711,
+      "prior_adj_prob_ens_acc": 0.7727,
+      "recovery_ratio": 0.016260158063020808
+    },
+    "cure4_linear_probe_upper_bound": {
+      "probe_acc": 0.7953000068664551,
+      "probe_gap": 0.024600006866455026,
+      "head_share": 0.24260361801237715
+    },
+    "elapsed_seconds": 28.679642915725708
+  },
+  {
+    "config": {
+      "source": "R3-L",
+      "s": 0.8,
+      "asymmetric_mode": "A_skew_B_iid",
+      "onset_pct": 25.0,
+      "seed": 42
+    },
+    "endpoints": {
+      "acc_A": 0.77,
+      "loss_A": 1.1920569194793702,
+      "acc_B": 0.7512,
+      "loss_B": 1.4364490339279175,
+      "acc_naive_merged": 0.8278,
+      "loss_naive_merged": 0.8876364418029785,
+      "acc_dip": 0.0
+    },
+    "distances": {
+      "d_pair": 0.168231507041018,
+      "d_body": 0.16746696408332265,
+      "d_head": 0.36828381589381176,
+      "raw_l2": 87.81523524772396,
+      "num_params": 272474,
+      "num_body_params": 271824,
+      "num_head_params": 650
+    },
+    "curvature": {
+      "curvature_total": 28.18584442143557,
+      "curvature_body": -30.495452880807683,
+      "curvature_head": 56.865882873569085
+    },
+    "layerwise_cka": {
+      "stage0_init": 0.9031347397501231,
+      "stage1_residual": 0.8906261483172775,
+      "stage2_residual": 0.8512121653096995,
+      "stage3_residual": 0.5662581025943616,
+      "penultimate_pooled": 0.6133396065116539,
+      "head_logits": 0.6815791505227934
+    },
+    "cure1_zero_shot_logit_adj": {
+      "best_acc": 0.8277999758720398,
+      "best_tau": 1.0,
+      "gain": 0.0,
+      "recovery_ratio": -5.744728945369608e-06,
+      "tau_sweep": {
+        "tau_0.25": 0.8273000121116638,
+        "tau_0.50": 0.8263999819755554,
+        "tau_0.75": 0.8256000280380249,
+        "tau_1.00": 0.8245000243186951,
+        "tau_1.25": 0.8223999738693237,
+        "tau_1.50": 0.8197000026702881,
+        "tau_2.00": 0.8170999884605408,
+        "tau_3.00": 0.8083000183105469
+      }
+    },
+    "cure2_few_shot_recalibration": {
+      "acc": 0.8184,
+      "gain": -0.009399999999999964,
+      "recovery_ratio": -2.238086090644265,
+      "target_passed": true
+    },
+    "cure3_decoupled_head_ensemble": {
+      "prob_ens_acc": 0.8277,
+      "prior_adj_prob_ens_acc": 0.8228,
+      "recovery_ratio": -0.023809426496213055
+    },
+    "cure4_linear_probe_upper_bound": {
+      "probe_acc": 0.8320000171661377,
+      "probe_gap": 0.004200017166137715,
+      "head_share": 0.09480851390830056
+    },
+    "elapsed_seconds": 28.770450353622437
+  }
+]

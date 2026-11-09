@@ -1,0 +1,73 @@
+{
+  "config": {
+    "source": "R3-L",
+    "s": 0.8,
+    "asymmetric_mode": null,
+    "onset_pct": 25.0,
+    "seed": 43
+  },
+  "endpoints": {
+    "acc_A": 0.7709,
+    "loss_A": 1.1829087091445922,
+    "acc_B": 0.7609,
+    "loss_B": 1.3539696098327636,
+    "acc_naive_merged": 0.8344,
+    "loss_naive_merged": 0.8415726684570313,
+    "acc_dip": 0.0
+  },
+  "distances": {
+    "d_pair": 0.16479554944693003,
+    "d_body": 0.16399136931533329,
+    "d_head": 0.3711183727914145,
+    "raw_l2": 86.02169829538322,
+    "num_params": 272474,
+    "num_body_params": 271824,
+    "num_head_params": 650
+  },
+  "curvature": {
+    "curvature_total": 37.63761520381159,
+    "curvature_body": 35.08892059322921,
+    "curvature_head": 1.1841773986942528
+  },
+  "layerwise_cka": {
+    "stage0_init": 0.9407693569751621,
+    "stage1_residual": 0.9086819761038861,
+    "stage2_residual": 0.8427909164353924,
+    "stage3_residual": 0.6102210253944149,
+    "penultimate_pooled": 0.6537088529580457,
+    "head_logits": 0.7107973284065967
+  },
+  "cure1_zero_shot_logit_adj": {
+    "best_acc": 0.8343999981880188,
+    "best_tau": 1.0,
+    "gain": 0.0,
+    "recovery_ratio": -0.0018119812317252126,
+    "tau_sweep": {
+      "tau_0.25": 0.8343999981880188,
+      "tau_0.50": 0.8343999981880188,
+      "tau_0.75": 0.8343999981880188,
+      "tau_1.00": 0.8343999981880188,
+      "tau_1.25": 0.8343999981880188,
+      "tau_1.50": 0.8343999981880188,
+      "tau_2.00": 0.8343999981880188,
+      "tau_3.00": 0.8343999981880188
+    }
+  },
+  "cure2_few_shot_recalibration": {
+    "acc": 0.83,
+    "gain": -0.0044000000000000705,
+    "recovery_ratio": -4400.000000000071,
+    "target_passed": true
+  },
+  "cure3_decoupled_head_ensemble": {
+    "prob_ens_acc": 0.8336,
+    "prior_adj_prob_ens_acc": 0.8346,
+    "recovery_ratio": -800.000000000023
+  },
+  "cure4_linear_probe_upper_bound": {
+    "probe_acc": 0.8342999815940857,
+    "probe_gap": -0.0001000184059143372,
+    "head_share": 0.0
+  },
+  "elapsed_seconds": 38.39002084732056
+}

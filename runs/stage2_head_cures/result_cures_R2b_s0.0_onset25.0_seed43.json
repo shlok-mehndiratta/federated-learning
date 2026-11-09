@@ -1,0 +1,73 @@
+{
+  "config": {
+    "source": "R2b",
+    "s": 0.0,
+    "asymmetric_mode": null,
+    "onset_pct": 25.0,
+    "seed": 43
+  },
+  "endpoints": {
+    "acc_A": 0.8487,
+    "loss_A": 0.7140381713867188,
+    "acc_B": 0.8451,
+    "loss_B": 0.7207916197299957,
+    "acc_naive_merged": 0.8557,
+    "loss_naive_merged": 0.737667919921875,
+    "acc_dip": 0.0
+  },
+  "distances": {
+    "d_pair": 0.17213607190295033,
+    "d_body": 0.17153116372846175,
+    "d_head": 0.3414195394724532,
+    "raw_l2": 89.85338070526292,
+    "num_params": 272474,
+    "num_body_params": 271824,
+    "num_head_params": 650
+  },
+  "curvature": {
+    "curvature_total": 24.778366088940018,
+    "curvature_body": 24.792575836207753,
+    "curvature_head": 0.13704299928196662
+  },
+  "layerwise_cka": {
+    "stage0_init": 0.9644095461902512,
+    "stage1_residual": 0.9226186023138017,
+    "stage2_residual": 0.8613950608133432,
+    "stage3_residual": 0.6234780390980359,
+    "penultimate_pooled": 0.6599826387800356,
+    "head_logits": 0.7318849836741181
+  },
+  "cure1_zero_shot_logit_adj": {
+    "best_acc": 0.8557000160217285,
+    "best_tau": 1.0,
+    "gain": 0.0,
+    "recovery_ratio": 0.000160260537684146,
+    "tau_sweep": {
+      "tau_0.25": 0.8557000160217285,
+      "tau_0.50": 0.8557000160217285,
+      "tau_0.75": 0.8557000160217285,
+      "tau_1.00": 0.8557000160217285,
+      "tau_1.25": 0.8557000160217285,
+      "tau_1.50": 0.8557000160217285,
+      "tau_2.00": 0.8557000160217285,
+      "tau_3.00": 0.8557000160217285
+    }
+  },
+  "cure2_few_shot_recalibration": {
+    "acc": 0.8559,
+    "gain": 0.00019999999999997797,
+    "recovery_ratio": 2.00053992538356,
+    "target_passed": true
+  },
+  "cure3_decoupled_head_ensemble": {
+    "prob_ens_acc": 0.8558,
+    "prior_adj_prob_ens_acc": 0.8558,
+    "recovery_ratio": 1.00026996269178
+  },
+  "cure4_linear_probe_upper_bound": {
+    "probe_acc": 0.8557999730110168,
+    "probe_gap": 9.997301101682954e-05,
+    "head_share": 0.006095915305904251
+  },
+  "elapsed_seconds": 39.93320655822754
+}

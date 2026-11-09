@@ -1,0 +1,73 @@
+{
+  "config": {
+    "source": "R3-L",
+    "s": 1.0,
+    "asymmetric_mode": null,
+    "onset_pct": 25.0,
+    "seed": 44
+  },
+  "endpoints": {
+    "acc_A": 0.4559,
+    "loss_A": 9.379603616333007,
+    "acc_B": 0.4767,
+    "loss_B": 8.477021383666992,
+    "acc_naive_merged": 0.7806,
+    "loss_naive_merged": 0.743090874671936,
+    "acc_dip": 0.0
+  },
+  "distances": {
+    "d_pair": 0.15171355370125797,
+    "d_body": 0.1489465795049567,
+    "d_head": 0.6090301946661896,
+    "raw_l2": 79.19302182376475,
+    "num_params": 272474,
+    "num_body_params": 271824,
+    "num_head_params": 650
+  },
+  "curvature": {
+    "curvature_total": 143.79119873053625,
+    "curvature_body": 27.90985107425925,
+    "curvature_head": 60.69583892820418
+  },
+  "layerwise_cka": {
+    "stage0_init": 0.8739967443988741,
+    "stage1_residual": 0.8849012621251473,
+    "stage2_residual": 0.8374628878649057,
+    "stage3_residual": 0.4232606624549665,
+    "penultimate_pooled": 0.43631586327649063,
+    "head_logits": 0.48737613000278934
+  },
+  "cure1_zero_shot_logit_adj": {
+    "best_acc": 0.7806000113487244,
+    "best_tau": 1.0,
+    "gain": 0.0,
+    "recovery_ratio": 5.135173336135858e-07,
+    "tau_sweep": {
+      "tau_0.25": 0.7806000113487244,
+      "tau_0.50": 0.7806000113487244,
+      "tau_0.75": 0.7806000113487244,
+      "tau_1.00": 0.7806000113487244,
+      "tau_1.25": 0.7806000113487244,
+      "tau_1.50": 0.7806000113487244,
+      "tau_2.00": 0.7806000113487244,
+      "tau_3.00": 0.7806000113487244
+    }
+  },
+  "cure2_few_shot_recalibration": {
+    "acc": 0.7841,
+    "gain": 0.0035000000000000586,
+    "recovery_ratio": 0.1583711616882746,
+    "target_passed": true
+  },
+  "cure3_decoupled_head_ensemble": {
+    "prob_ens_acc": 0.6981,
+    "prior_adj_prob_ens_acc": 0.7767,
+    "recovery_ratio": -3.7330345255092623
+  },
+  "cure4_linear_probe_upper_bound": {
+    "probe_acc": 0.8026999831199646,
+    "probe_gap": 0.02209998311996464,
+    "head_share": 0.2415298701635479
+  },
+  "elapsed_seconds": 38.23681139945984
+}

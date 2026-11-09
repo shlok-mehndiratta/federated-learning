@@ -1,0 +1,73 @@
+{
+  "config": {
+    "source": "R3-L",
+    "s": 1.0,
+    "asymmetric_mode": null,
+    "onset_pct": 2.0,
+    "seed": 43
+  },
+  "endpoints": {
+    "acc_A": 0.4549,
+    "loss_A": 12.318117994689942,
+    "acc_B": 0.4726,
+    "loss_B": 11.453446716308594,
+    "acc_naive_merged": 0.3806,
+    "loss_naive_merged": 1.9371597663879394,
+    "acc_dip": 0.09200000000000003
+  },
+  "distances": {
+    "d_pair": 0.22376204457048224,
+    "d_body": 0.2173650277759994,
+    "d_head": 1.1091261655518632,
+    "raw_l2": 116.80164393152363,
+    "num_params": 272474,
+    "num_body_params": 271824,
+    "num_head_params": 650
+  },
+  "curvature": {
+    "curvature_total": 256.43272399911154,
+    "curvature_body": 18.43986511240736,
+    "curvature_head": 201.4999389647887
+  },
+  "layerwise_cka": {
+    "stage0_init": 0.8142111404656003,
+    "stage1_residual": 0.7699943576317594,
+    "stage2_residual": 0.7140757788694003,
+    "stage3_residual": 0.35187813472472784,
+    "penultimate_pooled": 0.40865101734538056,
+    "head_logits": 0.43278851156565457
+  },
+  "cure1_zero_shot_logit_adj": {
+    "best_acc": 0.3806000053882599,
+    "best_tau": 1.0,
+    "gain": 0.0,
+    "recovery_ratio": 2.688752838684654e-08,
+    "tau_sweep": {
+      "tau_0.25": 0.3806000053882599,
+      "tau_0.50": 0.3806000053882599,
+      "tau_0.75": 0.3806000053882599,
+      "tau_1.00": 0.3806000053882599,
+      "tau_1.25": 0.3806000053882599,
+      "tau_1.50": 0.3806000053882599,
+      "tau_2.00": 0.3806000053882599,
+      "tau_3.00": 0.3806000053882599
+    }
+  },
+  "cure2_few_shot_recalibration": {
+    "acc": 0.474,
+    "gain": 0.09339999999999998,
+    "recovery_ratio": 0.46606793302788185,
+    "target_passed": true
+  },
+  "cure3_decoupled_head_ensemble": {
+    "prob_ens_acc": 0.4196,
+    "prior_adj_prob_ens_acc": 0.4102,
+    "recovery_ratio": 0.19461080715296986
+  },
+  "cure4_linear_probe_upper_bound": {
+    "probe_acc": 0.5809999704360962,
+    "probe_gap": 0.2003999704360962,
+    "head_share": 0.4077313742341733
+  },
+  "elapsed_seconds": 38.2635064125061
+}

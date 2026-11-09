@@ -1,0 +1,73 @@
+{
+  "config": {
+    "source": "R3-L",
+    "s": 0.8,
+    "asymmetric_mode": null,
+    "onset_pct": 2.0,
+    "seed": 42
+  },
+  "endpoints": {
+    "acc_A": 0.7749,
+    "loss_A": 1.2349418298721313,
+    "acc_B": 0.7482,
+    "loss_B": 1.4185312992095946,
+    "acc_naive_merged": 0.5439,
+    "loss_naive_merged": 1.761849486541748,
+    "acc_dip": 0.23099999999999998
+  },
+  "distances": {
+    "d_pair": 0.2551002869879438,
+    "d_body": 0.25024322384863407,
+    "d_head": 1.0447579951721098,
+    "raw_l2": 133.15990629594864,
+    "num_params": 272474,
+    "num_body_params": 271824,
+    "num_head_params": 650
+  },
+  "curvature": {
+    "curvature_total": -269.69261169407235,
+    "curvature_body": -358.18367004392115,
+    "curvature_head": 94.50721740722479
+  },
+  "layerwise_cka": {
+    "stage0_init": 0.8331371018543242,
+    "stage1_residual": 0.7637288265394037,
+    "stage2_residual": 0.7524070579965221,
+    "stage3_residual": 0.5198554454152289,
+    "penultimate_pooled": 0.5756529529329917,
+    "head_logits": 0.6524639599043598
+  },
+  "cure1_zero_shot_logit_adj": {
+    "best_acc": 0.5439000129699707,
+    "best_tau": 1.0,
+    "gain": 0.0,
+    "recovery_ratio": 1.4573000796205988e-07,
+    "tau_sweep": {
+      "tau_0.25": 0.5439000129699707,
+      "tau_0.50": 0.5439000129699707,
+      "tau_0.75": 0.5439000129699707,
+      "tau_1.00": 0.5439000129699707,
+      "tau_1.25": 0.5439000129699707,
+      "tau_1.50": 0.5439000129699707,
+      "tau_2.00": 0.5439000129699707,
+      "tau_3.00": 0.5439000129699707
+    }
+  },
+  "cure2_few_shot_recalibration": {
+    "acc": 0.574,
+    "gain": 0.030099999999999905,
+    "recovery_ratio": 0.33820224864060494,
+    "target_passed": false
+  },
+  "cure3_decoupled_head_ensemble": {
+    "prob_ens_acc": 0.5414,
+    "prior_adj_prob_ens_acc": 0.5404,
+    "recovery_ratio": -0.028089887760848326
+  },
+  "cure4_linear_probe_upper_bound": {
+    "probe_acc": 0.6328999996185303,
+    "probe_gap": 0.08899999961853022,
+    "head_share": 0.27117611096444316
+  },
+  "elapsed_seconds": 28.60453176498413
+}

@@ -1,0 +1,73 @@
+{
+  "config": {
+    "source": "R3-L",
+    "s": 0.8,
+    "asymmetric_mode": null,
+    "onset_pct": 10.0,
+    "seed": 44
+  },
+  "endpoints": {
+    "acc_A": 0.7611,
+    "loss_A": 1.30759070186615,
+    "acc_B": 0.7343,
+    "loss_B": 1.4580022171020508,
+    "acc_naive_merged": 0.7834,
+    "loss_naive_merged": 1.0470333459854126,
+    "acc_dip": 0.0
+  },
+  "distances": {
+    "d_pair": 0.20152327678638252,
+    "d_body": 0.1998711923282557,
+    "d_head": 0.5638524976292014,
+    "raw_l2": 105.19322016519507,
+    "num_params": 272474,
+    "num_body_params": 271824,
+    "num_head_params": 650
+  },
+  "curvature": {
+    "curvature_total": -26.929283142296256,
+    "curvature_body": -29.57954406745955,
+    "curvature_head": 2.4185180664826333
+  },
+  "layerwise_cka": {
+    "stage0_init": 0.8887341983498838,
+    "stage1_residual": 0.8585270988077436,
+    "stage2_residual": 0.7999753686926904,
+    "stage3_residual": 0.5428190423805305,
+    "penultimate_pooled": 0.5844239106199463,
+    "head_logits": 0.6514406573471794
+  },
+  "cure1_zero_shot_logit_adj": {
+    "best_acc": 0.7833999991416931,
+    "best_tau": 1.0,
+    "gain": 0.0,
+    "recovery_ratio": -4.821956122545455e-08,
+    "tau_sweep": {
+      "tau_0.25": 0.7833999991416931,
+      "tau_0.50": 0.7833999991416931,
+      "tau_0.75": 0.7833999991416931,
+      "tau_1.00": 0.7833999991416931,
+      "tau_1.25": 0.7833999991416931,
+      "tau_1.50": 0.7833999991416931,
+      "tau_2.00": 0.7833999991416931,
+      "tau_3.00": 0.7833999991416931
+    }
+  },
+  "cure2_few_shot_recalibration": {
+    "acc": 0.7897,
+    "gain": 0.006299999999999972,
+    "recovery_ratio": 0.35393312850056086,
+    "target_passed": true
+  },
+  "cure3_decoupled_head_ensemble": {
+    "prob_ens_acc": 0.783,
+    "prior_adj_prob_ens_acc": 0.7828,
+    "recovery_ratio": -0.0224719446666999
+  },
+  "cure4_linear_probe_upper_bound": {
+    "probe_acc": 0.8011999726295471,
+    "probe_gap": 0.017799972629547134,
+    "head_share": 0.20067612885622474
+  },
+  "elapsed_seconds": 39.34995937347412
+}

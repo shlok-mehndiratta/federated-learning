@@ -1,0 +1,73 @@
+{
+  "config": {
+    "source": "R3-L",
+    "s": 0.8,
+    "asymmetric_mode": null,
+    "onset_pct": 25.0,
+    "seed": 44
+  },
+  "endpoints": {
+    "acc_A": 0.7701,
+    "loss_A": 1.2350383262634277,
+    "acc_B": 0.7632,
+    "loss_B": 1.307088387966156,
+    "acc_naive_merged": 0.8352,
+    "loss_naive_merged": 0.8335855007171631,
+    "acc_dip": 0.0
+  },
+  "distances": {
+    "d_pair": 0.16610081320418296,
+    "d_body": 0.16534448610276828,
+    "d_head": 0.36389831891138963,
+    "raw_l2": 86.70303347402813,
+    "num_params": 272474,
+    "num_body_params": 271824,
+    "num_head_params": 650
+  },
+  "curvature": {
+    "curvature_total": 5.292510986354415,
+    "curvature_body": 2.6832580566349407,
+    "curvature_head": 1.0814666748792945
+  },
+  "layerwise_cka": {
+    "stage0_init": 0.9185196270874872,
+    "stage1_residual": 0.8977468479629044,
+    "stage2_residual": 0.8313803408142786,
+    "stage3_residual": 0.5891879447158754,
+    "penultimate_pooled": 0.6221084789609495,
+    "head_logits": 0.6951813847532787
+  },
+  "cure1_zero_shot_logit_adj": {
+    "best_acc": 0.8352000117301941,
+    "best_tau": 1.0,
+    "gain": 0.0,
+    "recovery_ratio": 0.011730194038328534,
+    "tau_sweep": {
+      "tau_0.25": 0.8352000117301941,
+      "tau_0.50": 0.8352000117301941,
+      "tau_0.75": 0.8352000117301941,
+      "tau_1.00": 0.8352000117301941,
+      "tau_1.25": 0.8352000117301941,
+      "tau_1.50": 0.8352000117301941,
+      "tau_2.00": 0.8352000117301941,
+      "tau_3.00": 0.8352000117301941
+    }
+  },
+  "cure2_few_shot_recalibration": {
+    "acc": 0.8317,
+    "gain": -0.0035000000000000586,
+    "recovery_ratio": -3500.0000000000587,
+    "target_passed": true
+  },
+  "cure3_decoupled_head_ensemble": {
+    "prob_ens_acc": 0.8353,
+    "prior_adj_prob_ens_acc": 0.8357,
+    "recovery_ratio": 99.99999999998899
+  },
+  "cure4_linear_probe_upper_bound": {
+    "probe_acc": 0.8352000117301941,
+    "probe_gap": 1.1730194038328534e-08,
+    "head_share": 3.178914373530774e-07
+  },
+  "elapsed_seconds": 38.4133665561676
+}
