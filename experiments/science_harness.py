@@ -105,6 +105,7 @@ def run_science_experiment(
     source: str = "R3-L",
     s: float = 0.8,
     asymmetric_mode: Optional[str] = None,
+    corruption_level: Optional[str] = None,
     seed: int = 42,
     device_name: str = "cuda" if torch.cuda.is_available() else "cpu",
     output_dir: str = "./runs/science_harness",
@@ -122,8 +123,9 @@ def run_science_experiment(
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
 
+    corruption_tag = f" | Corruption={corruption_level}" if corruption_level else ""
     print(f"\n" + "=" * 80)
-    print(f"SCIENCE HARNESS: Source={source} | s={s} | Onset={onset_pct}% | Seed={seed} | Device={device_name}")
+    print(f"SCIENCE HARNESS: Source={source} | s={s}{corruption_tag} | Onset={onset_pct}% | Seed={seed} | Device={device_name}")
     print("=" * 80)
 
     # 1. Load CIFAR-10 data
@@ -140,6 +142,7 @@ def run_science_experiment(
         source=source,
         s=s,
         asymmetric_mode=asymmetric_mode,
+        corruption_level=corruption_level,
         seed=seed
     )
 
@@ -331,7 +334,12 @@ def run_science_experiment(
 
     # Optional: save branch endpoint weights for rapid Stage 2 head cures
     if save_models:
-        model_name_base = f"model_{source}_s{s}_onset{onset_pct}_seed{seed}" if not asymmetric_mode else f"model_{source}_{asymmetric_mode}_onset{onset_pct}_seed{seed}"
+        if asymmetric_mode:
+            model_name_base = f"model_{source}_{asymmetric_mode}_onset{onset_pct}_seed{seed}"
+        elif source == "R3-F" and corruption_level:
+            model_name_base = f"model_{source}_{corruption_level}_onset{onset_pct}_seed{seed}"
+        else:
+            model_name_base = f"model_{source}_s{s}_onset{onset_pct}_seed{seed}"
         path_A = os.path.join(output_dir, f"{model_name_base}_branchA.pt")
         path_B = os.path.join(output_dir, f"{model_name_base}_branchB.pt")
         torch.save(model_A.state_dict(), path_A)
@@ -346,6 +354,7 @@ def run_science_experiment(
             "source": source,
             "s": s,
             "asymmetric_mode": asymmetric_mode,
+            "corruption_level": corruption_level,
             "seed": seed,
             "device": device_name
         },
@@ -375,9 +384,13 @@ def run_science_experiment(
     }
 
     # Save to disk
-    out_filename = f"result_{source}_s{s}_onset{onset_pct}_seed{seed}.json"
     if asymmetric_mode:
         out_filename = f"result_{source}_{asymmetric_mode}_onset{onset_pct}_seed{seed}.json"
+    elif source == "R3-F" and corruption_level:
+        out_filename = f"result_{source}_{corruption_level}_onset{onset_pct}_seed{seed}.json"
+    else:
+        out_filename = f"result_{source}_s{s}_onset{onset_pct}_seed{seed}.json"
+
     out_path = os.path.join(output_dir, out_filename)
     with open(out_path, "w") as f:
         json.dump(record, f, indent=2)
@@ -393,6 +406,7 @@ def main():
     parser.add_argument("--source", type=str, default="R3-L", choices=["R1", "R2a", "R2b", "R3-L", "R3-F"])
     parser.add_argument("--s", type=float, default=0.8, help="Label separation parameter in {0.0, 0.5, 0.8, 0.95, 1.0}")
     parser.add_argument("--asymmetric_mode", type=str, default=None, choices=[None, "A_skew_B_iid", "ratio_70_30"])
+    parser.add_argument("--corruption_level", type=str, default=None, choices=[None, "mild", "severe"], help="Feature corruption level for R3-F")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--data_dir", type=str, default="./data/cache", help="Persistent dataset cache directory")
@@ -406,6 +420,7 @@ def main():
         source=args.source,
         s=args.s,
         asymmetric_mode=args.asymmetric_mode,
+        corruption_level=args.corruption_level,
         seed=args.seed,
         device_name=args.device,
         output_dir=args.output_dir,
