@@ -1,5 +1,5 @@
 {
-  "dataset_size": 36,
+  "dataset_size": 54,
   "cv_accuracy": 1.0,
   "feature_names": [
     "onset_pct",
@@ -14,5 +14,5 @@
     "ENSEMBLE_DECOUPLED",
     "DISCARD_LAGGING"
   ],
-  "rules_text": "======================================================================\nAUTOMATED FEDERATED OUTAGE RECONNECTION TRIAGE RULES\n======================================================================\nIF onset_pct <= 6.000:\n    IF head_body_ratio <= 3.551:\n        \u2514\u2500\u2500> RECOMMEND: MERGE_FEDAVG (confidence=100.0%, n=3)\n    ELSE (head_body_ratio > 3.551):\n        \u2514\u2500\u2500> RECOMMEND: CURE_HEAD_FEWSHOT (confidence=100.0%, n=9)\nELSE (onset_pct > 6.000):\n    \u2514\u2500\u2500> RECOMMEND: MERGE_FEDAVG (confidence=100.0%, n=24)\n======================================================================"
+  "rules_text": "======================================================================\nAUTOMATED FEDERATED OUTAGE RECONNECTION TRIAGE RULES\n======================================================================\nIF onset_pct <= 6.000:\n    IF d_pair <= 0.272:\n        IF head_body_ratio <= 3.551:\n            \u2514\u2500\u2500> RECOMMEND: MERGE_FEDAVG (confidence=100.0%, n=3)\n        ELSE (head_body_ratio > 3.551):\n            \u2514\u2500\u2500> RECOMMEND: CURE_HEAD_FEWSHOT (confidence=100.0%, n=9)\n    ELSE (d_pair > 0.272):\n        \u2514\u2500\u2500> RECOMMEND: ENSEMBLE_DECOUPLED (confidence=100.0%, n=6)\nELSE (onset_pct > 6.000):\n    \u2514\u2500\u2500> RECOMMEND: MERGE_FEDAVG (confidence=100.0%, n=36)\n======================================================================"
 }

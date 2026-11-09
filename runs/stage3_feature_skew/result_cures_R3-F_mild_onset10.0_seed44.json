@@ -1,0 +1,72 @@
+{
+  "config": {
+    "source": "R3-F",
+    "corruption_level": "mild",
+    "s": 0.0,
+    "asymmetric_mode": null,
+    "onset_pct": 10.0,
+    "seed": 44
+  },
+  "endpoints": {
+    "acc_A": 0.8406,
+    "loss_A": 0.7284600839614869,
+    "acc_B": 0.7821,
+    "loss_B": 0.8003351526260376,
+    "acc_naive_merged": 0.7734,
+    "loss_naive_merged": 1.0208934350013732,
+    "acc_dip": 0.03795000000000004
+  },
+  "distances": {
+    "d_pair": 0.23645624837865567,
+    "d_body": 0.23482011340742087,
+    "d_head": 0.6151151437516414,
+    "raw_l2": 123.42789672628405,
+    "num_params": 272474,
+    "num_body_params": 271824,
+    "num_head_params": 650
+  },
+  "curvature": {
+    "curvature_total": -112.40959167468922,
+    "curvature_body": -112.23316192610078,
+    "curvature_head": 0.34561157247203766
+  },
+  "layerwise_cka": {
+    "stage0_init": 0.7853770526446572,
+    "stage1_residual": 0.7176390683129638,
+    "stage2_residual": 0.6958992821036067,
+    "stage3_residual": 0.5320267085846317,
+    "penultimate_pooled": 0.57737026096084,
+    "head_logits": 0.6482603248798964
+  },
+  "cure1_zero_shot_logit_adj": {
+    "best_acc": 0.7734000086784363,
+    "best_tau": 1.0,
+    "gain": 0.0,
+    "recovery_ratio": 0.0,
+    "tau_sweep": {
+      "tau_0.25": 0.7734000086784363,
+      "tau_0.50": 0.7734000086784363,
+      "tau_0.75": 0.7734000086784363,
+      "tau_1.00": 0.7734000086784363,
+      "tau_1.25": 0.7734000086784363,
+      "tau_1.50": 0.7734000086784363,
+      "tau_2.00": 0.7734000086784363,
+      "tau_3.00": 0.7734000086784363
+    }
+  },
+  "cure2_few_shot_recalibration": {
+    "acc": 0.7778,
+    "gain": 0.0044000000000000705,
+    "recovery_ratio": 0.8800000000000141,
+    "target_passed": true
+  },
+  "cure3_decoupled_head_ensemble": {
+    "prob_ens_acc": 0.7731,
+    "prior_adj_prob_ens_acc": 0.7731,
+    "recovery_ratio": -0.05999999999999339
+  },
+  "cure4_linear_probe_upper_bound": {
+    "probe_acc": 0.5159000158309937,
+    "probe_gap": -0.2574999841690063
+  }
+}
