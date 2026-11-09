@@ -37,13 +37,13 @@ from fl_outage.models.resnet import ResNet20LN
 from analysis.scientific_metrics import (
     compute_parameter_distances,
     compute_directional_curvature,
-    extract_stage_representations,
     compute_layerwise_cka,
     evaluate_zero_shot_logit_adjustment,
     evaluate_few_shot_head_gain,
     evaluate_decoupled_head_ensemble,
     evaluate_linear_probe_gap,
-    evaluate_model
+    evaluate_model,
+    interpolate_state_dicts
 )
 
 
@@ -111,13 +111,12 @@ def evaluate_feature_skew_cures(
     seed = cfg["seed"]
 
     # Model checkpoint paths
-    path_A = os.path.join(model_dir, f"model_R3-F_s0.0_onset{onset}_seed{seed}_branchA.pt")
-    path_B = os.path.join(model_dir, f"model_R3-F_s0.0_onset{onset}_seed{seed}_branchB.pt")
+    path_A = os.path.join(model_dir, f"model_R3-F_{level}_onset{onset}_seed{seed}_branchA.pt")
+    path_B = os.path.join(model_dir, f"model_R3-F_{level}_onset{onset}_seed{seed}_branchB.pt")
 
-    # If named with corruption_level
     if not os.path.exists(path_A):
-        alt_path_A = os.path.join(model_dir, f"model_R3-F_{level}_onset{onset}_seed{seed}_branchA.pt")
-        alt_path_B = os.path.join(model_dir, f"model_R3-F_{level}_onset{onset}_seed{seed}_branchB.pt")
+        alt_path_A = os.path.join(model_dir, f"model_R3-F_s0.0_onset{onset}_seed{seed}_branchA.pt")
+        alt_path_B = os.path.join(model_dir, f"model_R3-F_s0.0_onset{onset}_seed{seed}_branchB.pt")
         if os.path.exists(alt_path_A):
             path_A, path_B = alt_path_A, alt_path_B
 
@@ -143,27 +142,22 @@ def evaluate_feature_skew_cures(
     model_B = ResNet20LN(num_classes=10).to(device)
     model_A.load_state_dict(torch.load(path_A, map_location=device, weights_only=True))
     model_B.load_state_dict(torch.load(path_B, map_location=device, weights_only=True))
+    model_A.eval()
+    model_B.eval()
 
-    criterion = torch.nn.CrossEntropyLoss()
-    loss_A, acc_A = evaluate_model(model_A, test_loader, criterion, device)
-    loss_B, acc_B = evaluate_model(model_B, test_loader, criterion, device)
+    loss_A, acc_A = evaluate_model(model_A, test_loader, device)
+    loss_B, acc_B = evaluate_model(model_B, test_loader, device)
 
     # 2. Naive Midpoint Merged Model
-    model_merged = deepcopy(model_A)
-    merged_sd = model_merged.state_dict()
-    sd_A = model_A.state_dict()
-    sd_B = model_B.state_dict()
-    for k in merged_sd.keys():
-        if merged_sd[k].dtype.is_floating_point:
-            merged_sd[k] = 0.5 * (sd_A[k] + sd_B[k])
-    model_merged.load_state_dict(merged_sd)
-    loss_merged, acc_merged = evaluate_model(model_merged, test_loader, criterion, device)
+    model_merged = deepcopy(model_A).to(device)
+    model_merged.load_state_dict(interpolate_state_dicts(model_A.state_dict(), model_B.state_dict(), 0.5))
+    loss_merged, acc_merged = evaluate_model(model_merged, test_loader, device)
     baseline_acc = 0.5 * (acc_A + acc_B)
     acc_dip = max(0.0, baseline_acc - acc_merged)
 
     # 3. Parameter Distances & Directional Curvature
     dist_metrics = compute_parameter_distances(model_A, model_B)
-    curv_metrics = compute_directional_curvature(model_A, model_B, test_loader, criterion, device)
+    curv_metrics = compute_directional_curvature(model_A, model_B, test_loader, device)
 
     # 4. Layerwise Angular CKA
     probe_indices = []
@@ -174,36 +168,51 @@ def evaluate_feature_skew_cures(
         probe_indices.extend(rng_p.choice(c_idx, size=100, replace=False))
     probe_loader = DataLoader(Subset(test_set, probe_indices), batch_size=128, shuffle=False)
 
-    reps_A = extract_stage_representations(model_A, probe_loader, device)
-    reps_B = extract_stage_representations(model_B, probe_loader, device)
-    layerwise_cka = compute_layerwise_cka(reps_A, reps_B)
+    layerwise_cka = compute_layerwise_cka(model_A, model_B, probe_loader, device)
 
-    # 5. Cure 1: Zero-Shot Logit Adjustment
-    prior_ratios = torch.ones(10, dtype=torch.float32, device=device)
+    # 5. Theoretical priors (Uniform for feature skew)
+    p_A = np.ones(10) / 10.0
+    p_B = np.ones(10) / 10.0
+    p_mix = 0.5 * (p_A + p_B)
+
+    # 6. Cure 1: Zero-Shot Logit Adjustment
     cure1_res = evaluate_zero_shot_logit_adjustment(
-        model_merged, test_loader, prior_ratios, device, tau_values=[0.25, 0.5, 1.0, 1.5, 2.0]
+        model=model_merged,
+        dataloader=test_loader,
+        p_mix=p_mix,
+        device=device
     )
 
-    # 6. Cure 2: Few-Shot Head Recalibration (200 balanced samples, 5 epochs, frozen body)
+    # 7. Cure 2: Few-Shot Head Recalibration (200 balanced samples, 5 epochs, frozen body)
     fs_acc, fs_gain = evaluate_few_shot_head_gain(
-        model_merged, few_shot_loader, test_loader, device, epochs=5, lr=0.05
+        model_merged=model_merged,
+        balanced_few_shot_loader=few_shot_loader,
+        test_loader=test_loader,
+        device=device,
+        epochs=5,
+        lr=0.05
     )
 
-    # 7. Cure 3: Decoupled Head Ensemble
-    prior_A = torch.ones(10, device=device) / 10.0
-    prior_B = torch.ones(10, device=device) / 10.0
+    # 8. Cure 3: Decoupled Head Ensemble
     cure3_res = evaluate_decoupled_head_ensemble(
-        model_A, model_B, model_merged, test_loader, prior_A, prior_B, device
+        model_A=model_A,
+        model_B=model_B,
+        dataloader=test_loader,
+        device=device,
+        p_A=p_A,
+        p_B=p_B,
+        tau=1.0
     )
 
-    # 8. Cure 4: Linear Probe Upper Bound (Feature Trunk Quality)
-    probe_res = evaluate_linear_probe_gap(
-        model_merged, train_loader=probe_train_loader, test_loader=test_loader,
-        device=device, epochs=10, lr=0.1
+    # 9. Cure 4: Linear Probe Upper Bound (Feature Trunk Quality)
+    probe_acc, probe_gap = evaluate_linear_probe_gap(
+        model_merged=model_merged,
+        train_loader=probe_train_loader,
+        test_loader=test_loader,
+        device=device,
+        epochs=5
     )
 
-    probe_acc = probe_res["probe_acc"]
-    probe_gap = probe_res["probe_gap"]
     denom = max(probe_acc - acc_merged, 0.005)
     fs_rec_ratio = fs_gain / denom
 
@@ -228,13 +237,24 @@ def evaluate_feature_skew_cures(
         "distances": dist_metrics,
         "curvature": curv_metrics,
         "layerwise_cka": layerwise_cka,
-        "cure1_zero_shot_logit_adj": cure1_res,
+        "cure1_zero_shot_logit_adj": {
+            "best_acc": float(cure1_res["best_adjusted_acc"]),
+            "best_tau": float(cure1_res["best_tau"]),
+            "gain": float(cure1_res["gain"]),
+            "recovery_ratio": float(cure1_res["gain"] / denom),
+            "tau_sweep": cure1_res["tau_sweep"]
+        },
         "cure2_few_shot_recalibration": {
             "acc": float(fs_acc),
             "gain": float(fs_gain),
-            "recovery_ratio": float(fs_rec_ratio)
+            "recovery_ratio": float(fs_rec_ratio),
+            "target_passed": bool(fs_rec_ratio >= 0.60 or fs_acc >= acc_A)
         },
-        "cure3_decoupled_head_ensemble": cure3_res,
+        "cure3_decoupled_head_ensemble": {
+            "prob_ens_acc": float(cure3_res["decoupled_prob_ens_acc"]),
+            "prior_adj_prob_ens_acc": float(cure3_res.get("decoupled_adj_prob_ens_acc", 0.0)),
+            "recovery_ratio": float((cure3_res["decoupled_prob_ens_acc"] - acc_merged) / denom)
+        },
         "cure4_linear_probe_upper_bound": {
             "probe_acc": float(probe_acc),
             "probe_gap": float(probe_gap)
