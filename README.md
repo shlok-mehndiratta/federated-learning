@@ -48,9 +48,32 @@ source .venv/bin/activate
 uv pip install -e .
 ```
 
-### 2. Run Gate G0 Tests
+### 2. Run Test Suite
 ```bash
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest tests/ -v
+PYTHONPATH=. pytest tests/ -v
 ```
 
-All 8 tests should pass in ~1 minute, validating determinism, barrier calculation sanity, disjoint Dirichlet partitions, group isolation invariance, and end-to-end smoke execution.
+All tests validate determinism, parameter-stage mappings, pairwise disjoint dataset splits, barrier calculation sanity, and group isolation.
+
+---
+
+## Reproducing v2 Experimental Results
+
+All empirical experiments for the paper are automated via `run_v2.sh`. Hypotheses H1–H8 and primary statistical tests are pre-registered in [`PREREG_v2.md`](PREREG_v2.md).
+
+```bash
+# 1. Sanity & bitwise determinism checks:
+DATA=data/cache bash run_v2.sh smoke
+DATA=data/cache bash run_v2.sh determinism
+
+# 2. Main experimental runs:
+DATA=data/cache bash run_v2.sh core       # Tier A: 5 sources x 6 onsets x 5 seeds (fixed L=5k)
+DATA=data/cache bash run_v2.sh lsweep     # Outage duration sweep at k=2%
+DATA=data/cache bash run_v2.sh c100       # CIFAR-100 scaling benchmark
+LR=0.03 MOM=0.9 DATA=data/cache bash run_v2.sh fl_main  # Tier B: 10-client FedAvg
+
+# 3. Compile all tables, figures, and policy regret metrics:
+DATA=data/cache bash run_v2.sh analyze
+# Or call directly:
+python experiments/summarize_v2.py --in_dirs runs/v2_core runs/v2_lsweep runs/v2_cifar100 --out_dir docs/v2
+```
