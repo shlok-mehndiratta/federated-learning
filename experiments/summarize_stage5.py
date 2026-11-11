@@ -19,6 +19,9 @@ def main():
     a = ap.parse_args(); os.makedirs(a.out_dir, exist_ok=True)
     R = [json.load(open(f)) for f in glob.glob(os.path.join(a.in_dir, "fl_*.json"))]
     print(f"Loaded {len(R)} runs")
+    if not R:
+        print(f"No completed FedAvg runs found yet in {a.in_dir}.")
+        return
     cells = sorted({(r["source"], r["onset_rounds"]) for r in R}, key=lambda c: (ORDER.index(c[0]), c[1]))
     pct = lambda v: 100 * np.asarray(v)
     ms = lambda v: f"${pct(v).mean():.2f} \\pm {pct(v).std(ddof=1) if len(v) > 1 else 0:.2f}$"
