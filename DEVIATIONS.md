@@ -19,3 +19,13 @@
 ## 3. Treatment of Orthogonal Label Skew ($s=1.0$) in Multi-Client FedAvg
 - **Finding:** Under extreme disjoint class partitioning ($s=1.0$), decentralized 10-client FedAvg exhibits low no-outage accuracy (~17%–27%) due to severe orthogonal client drift across decentralized local update steps.
 - **Reporting Status:** In accordance with the pre-registered scenario planning (§5, H7-b), $s=1.0$ in multi-client FedAvg is formally documented and reported as a pathological edge-case boundary where standard FedAvg requires specialized drift-correction (e.g., SCAFFOLD/FedProx). The primary multi-client FedAvg conclusions focus on IID and moderate label skew ($s \le 0.8$).
+
+## 4. Operationalisation of Head Share (Hypothesis H3)
+- **Observation:** Head share computed as an unweighted mean of per-seed ratios $(\text{probe}_i - \text{merge}_i) / (\text{ref}_i - \text{merge}_i)$ exhibited numerical instability (producing spurious ratios exceeding 100% when the denominator penalty is small or near-zero).
+- **Refinement:** Following observation of preliminary results ($n=3\text{--}5$), Hypothesis H3 is formally operationalised via two robust paired Student-$t$ tests:
+  1. $\text{probe} - \text{merge} > 0$ (verifying that the classifier head absorbs non-zero recoverable damage), and
+  2. $\text{ref} - \text{probe} > 0$ (verifying that non-zero residual damage remains permanently in the representation body).
+  Head share is reported strictly as a ratio of means ($\frac{\overline{\text{probe}} - \overline{\text{merge}}}{\overline{\text{ref}} - \overline{\text{merge}}}$), and evaluated only in cells where the empirical merge penalty is non-negligible ($\ge 2.0$ points).
+
+## 5. Specification Correction: Validation Split Sample Counts
+- **Correction:** In `PREREG_v2.md` §1, the text inadvertently described the validation split as "200 images (20/class)". The true protocol implemented in code (`make_splits`, `val_pc=200` for CIFAR-10 and `val_pc=20` for CIFAR-100) carves out **200 images per class** for CIFAR-10 (2,000 images total) and **20 images per class** for CIFAR-100 (2,000 images total).

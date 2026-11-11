@@ -21,7 +21,7 @@ ACTIONS = {"merge": "acc_merge", "cure2": "acc_cure2", "cure2_fullft": "acc_cure
 def ci95(x):
     x = np.asarray(x, float); n = len(x)
     if n < 2: return x.mean(), np.nan, np.nan
-    h = stats.t.ppf(0.975, n - 1) * x.std(ddof=1) / np.sqrt(n)
+    h = stats.t.ppf(0.975, n - 1) * stats.sem(x)
     return x.mean(), x.mean() - h, x.mean() + h
 
 
@@ -57,22 +57,33 @@ def main():
     rows, pvals, cure_rows = [], [], []
     for k in keys:
         S = sorted(cell[k], key=lambda r: r["seed"]); g = lambda f: [100 * r[f] for r in S]
-        pen = ci95(g("penalty")); hs = [r["head_share"] for r in S if r["head_share"] is not None]
-        hsm = ci95([100 * h for h in hs]) if hs else (np.nan, np.nan, np.nan)
+        pen = ci95(g("penalty"))
+        # H3 operationalised without an unstable per-seed ratio:
+        #   head_gain = probe - merge  (> 0  <=> head share > 0)
+        #   residual  = ref - probe    (> 0  <=> head share < 1)
+        # head share itself is reported as a ratio of means, only when the penalty is non-negligible.
+        head_gain = ci95(np.array(g("acc_probe_converged")) - np.array(g("acc_merge")))
+        residual = ci95(np.array(g("acc_ref")) - np.array(g("acc_probe_converged")))
+        hs_rom = (head_gain[0] / pen[0] * 100) if pen[0] >= 2.0 else np.nan
+        hsm = (hs_rom, np.nan, np.nan)
         d2 = np.array(g("acc_cure2")) - np.array(g("acc_merge")); dft = np.array(g("acc_cure2")) - np.array(g("acc_cure2_fullft"))
         p2 = stats.ttest_rel(g("acc_cure2"), g("acc_merge")).pvalue if len(S) > 1 else np.nan
         pvals.append(p2)
         summary["|".join(map(str, k))] = dict(n=len(S), ref=ci95(g("acc_ref")), merge=ci95(g("acc_merge")), penalty=pen,
-                                                head_share=hsm, cure2_gain=ci95(d2), cure2_minus_fullft=ci95(dft), p_cure2=p2,
+                                                head_share_ratio_of_means=hs_rom, head_gain_probe_minus_merge=head_gain,
+                                                residual_ref_minus_probe=residual, head_share=hsm, cure2_gain=ci95(d2), cure2_minus_fullft=ci95(dft), p_cure2=p2,
                                                 rho=ci95([r["rho"] for r in S]), d_pair=ci95([r["d_pair"] for r in S]))
         rows.append((k, S, pen, hsm)); cure_rows.append((k, S, ci95(d2), ci95(dft)))
     ph = holm([p if np.isfinite(p) else 1.0 for p in pvals])
     fmt = lambda m: f"{m[0]:.2f} [{m[1]:.2f}, {m[2]:.2f}]" if np.isfinite(m[1]) else f"{m[0]:.2f}"
-    t = [r"\begin{table*}[t]\centering\small", r"\caption{Merge penalty relative to the no-outage reference at the same step (mean [95\% CI] over seeds). Head share: fraction of the penalty recovered by a converged head-only probe on the frozen merged backbone.}",
-         r"\resizebox{\textwidth}{!}{\begin{tabular}{llrrrrrrr}\toprule Data & Cohort data & $k$ (\%) & $L$ & $n$ & No outage & Merge & Penalty (pts) & Head share (\%)\\\midrule"]
+    t = [r"\begin{table*}[t]\centering\small", r"\caption{Merge penalty relative to the no-outage reference at the same step (mean [95\% CI] over seeds). Head gain = converged head-only probe $-$ merge; residual = no outage $-$ probe (both paired, points). Head share = head gain / penalty (ratio of means), shown only when the penalty is $\ge$ 2 points.}",
+         r"\resizebox{\textwidth}{!}{\begin{tabular}{llrrrrrrrrr}\toprule Data & Cohort data & $k$ (\%) & $L$ & $n$ & No outage & Merge & Penalty (pts) & Head gain (pts) & Residual (pts) & Head share (\%)\\\midrule"]
     for (k, S, pen, hsm) in rows:
         g = lambda f: np.mean([100 * r[f] for r in S])
-        t.append(f"{k[0]} & {SRC_NAME[k[1]]} & {k[2]:g} & {k[3]} & {len(S)} & {g('acc_ref'):.2f} & {g('acc_merge'):.2f} & {fmt(pen)} & {fmt(hsm)}\\\\")
+        sm = summary["|".join(map(str, k))]
+        hs_txt = f"{hsm[0]:.1f}" if np.isfinite(hsm[0]) else "--"
+        t.append(f"{k[0]} & {SRC_NAME[k[1]]} & {k[2]:g} & {k[3]} & {len(S)} & {g('acc_ref'):.2f} & {g('acc_merge'):.2f} & {fmt(pen)} & "
+                 f"{fmt(sm['head_gain_probe_minus_merge'])} & {fmt(sm['residual_ref_minus_probe'])} & {hs_txt}\\\\")
     t.append(r"\bottomrule\end{tabular}}\end{table*}")
     open(os.path.join(a.out_dir, "table_core.tex"), "w").write("\n".join(t))
 
@@ -119,8 +130,8 @@ def main():
             x = [k[2] for k in ks]
             m = [ci95([100 * r["penalty"] for r in cell[k]]) for k in ks]
             ax[0].errorbar(x, [v[0] for v in m], yerr=[[v[0] - v[1] for v in m], [v[2] - v[0] for v in m]], marker="o", capsize=3, label=SRC_NAME[src])
-            h = [ci95([100 * r["head_share"] for r in cell[k] if r["head_share"] is not None]) for k in ks]
-            ax[1].plot(x, [v[0] for v in h], marker="o", label=SRC_NAME[src])
+            h = [summary["|".join(map(str, k))]["head_share_ratio_of_means"] for k in ks]
+            ax[1].plot(x, h, marker="o", label=SRC_NAME[src])
             d = [ci95([100 * (r["acc_cure2"] - r["acc_merge"]) for r in cell[k]]) for k in ks]
             ax[2].errorbar(x, [v[0] for v in d], yerr=[[v[0] - v[1] for v in d], [v[2] - v[0] for v in d]], marker="o", capsize=3, label=SRC_NAME[src])
         for i, (yl, tt) in enumerate([("Penalty vs. no outage (pts)", f"Merge penalty at fixed L={Lmain}"), ("Head share (%)", "Fraction recoverable by the head"), ("Cure 2 gain (pts)", "Few-shot head recalibration")]):
@@ -160,8 +171,10 @@ def main():
         ax[0].legend(fontsize=7); plt.tight_layout(); plt.savefig(os.path.join(a.out_dir, f"fig_mechanism_{ds}.pdf")); plt.close()
 
     json.dump(summary, open(os.path.join(a.out_dir, "summary.json"), "w"), indent=1, default=float)
-    print("\n".join(f"{k}: penalty={v['penalty'][0]:.2f} head_share={v['head_share'][0]:.1f} cure2_gain={v['cure2_gain'][0]:+.2f}"
-                    for k, v in summary.items() if not k.startswith("policy")))
+    f3 = lambda m: f"{m[0]:.2f} [{m[1]:.2f}, {m[2]:.2f}]"
+    print("\n".join(f"{k} (n={v['n']}): penalty={f3(v['penalty'])} head_gain={f3(v['head_gain_probe_minus_merge'])} "
+                    f"residual={f3(v['residual_ref_minus_probe'])} head_share_rom={v['head_share_ratio_of_means']:.1f} "
+                    f"cure2_gain={f3(v['cure2_gain'])}" for k, v in summary.items() if not k.startswith("policy")))
     print({k: v for k, v in summary.items() if k.startswith("policy")})
 
 
