@@ -21,7 +21,7 @@ ACTIONS = {"merge": "acc_merge", "cure2": "acc_cure2", "cure2_fullft": "acc_cure
 def ci95(x):
     x = np.asarray(x, float); n = len(x)
     if n < 2: return x.mean(), np.nan, np.nan
-    h = stats.t.ppf(0.975, n - 1) * stats.sem(x)
+    h = stats.t.ppf(0.975, n - 1) * x.std(ddof=1) / np.sqrt(n)
     return x.mean(), x.mean() - h, x.mean() + h
 
 
@@ -65,13 +65,23 @@ def main():
         head_gain = ci95(np.array(g("acc_probe_converged")) - np.array(g("acc_merge")))
         residual = ci95(np.array(g("acc_ref")) - np.array(g("acc_probe_converged")))
         hs_rom = (head_gain[0] / pen[0] * 100) if pen[0] >= 2.0 else np.nan
+        # Bias-free decomposition when the reference-backbone probe is available (07 >= v2.1 or 09 backfill):
+        #   backbone damage = probe(ref) - probe(merge);  head damage = penalty - backbone damage
+        if all("acc_probe_ref" in r for r in S):
+            bb = np.array(g("acc_probe_ref")) - np.array(g("acc_probe_converged"))
+            hd = np.array(g("penalty")) - bb
+            decomp = dict(backbone_damage=ci95(bb), head_damage=ci95(hd),
+                          head_share_decomp=(hd.mean() / pen[0] * 100) if pen[0] >= 2.0 else np.nan,
+                          probe_ref_minus_ref=ci95(np.array(g("acc_probe_ref")) - np.array(g("acc_ref"))))
+        else:
+            decomp = {}
         hsm = (hs_rom, np.nan, np.nan)
         d2 = np.array(g("acc_cure2")) - np.array(g("acc_merge")); dft = np.array(g("acc_cure2")) - np.array(g("acc_cure2_fullft"))
         p2 = stats.ttest_rel(g("acc_cure2"), g("acc_merge")).pvalue if len(S) > 1 else np.nan
         pvals.append(p2)
         summary["|".join(map(str, k))] = dict(n=len(S), ref=ci95(g("acc_ref")), merge=ci95(g("acc_merge")), penalty=pen,
                                                 head_share_ratio_of_means=hs_rom, head_gain_probe_minus_merge=head_gain,
-                                                residual_ref_minus_probe=residual, head_share=hsm, cure2_gain=ci95(d2), cure2_minus_fullft=ci95(dft), p_cure2=p2,
+                                                residual_ref_minus_probe=residual, head_share=hsm, **decomp, cure2_gain=ci95(d2), cure2_minus_fullft=ci95(dft), p_cure2=p2,
                                                 rho=ci95([r["rho"] for r in S]), d_pair=ci95([r["d_pair"] for r in S]))
         rows.append((k, S, pen, hsm)); cure_rows.append((k, S, ci95(d2), ci95(dft)))
     ph = holm([p if np.isfinite(p) else 1.0 for p in pvals])
@@ -174,7 +184,10 @@ def main():
     f3 = lambda m: f"{m[0]:.2f} [{m[1]:.2f}, {m[2]:.2f}]"
     print("\n".join(f"{k} (n={v['n']}): penalty={f3(v['penalty'])} head_gain={f3(v['head_gain_probe_minus_merge'])} "
                     f"residual={f3(v['residual_ref_minus_probe'])} head_share_rom={v['head_share_ratio_of_means']:.1f} "
-                    f"cure2_gain={f3(v['cure2_gain'])}" for k, v in summary.items() if not k.startswith("policy")))
+                    f"cure2_gain={f3(v['cure2_gain'])} cure2_minus_fullft={f3(v['cure2_minus_fullft'])}"
+                    + (f" | backbone={f3(v['backbone_damage'])} head={f3(v['head_damage'])} head_share_decomp={v['head_share_decomp']:.1f}"
+                       if 'backbone_damage' in v else "")
+                    for k, v in summary.items() if not k.startswith("policy")))
     print({k: v for k, v in summary.items() if k.startswith("policy")})
 
 

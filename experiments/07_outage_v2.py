@@ -220,6 +220,14 @@ def fit_head(f, y, w0, b0, C, mode, gen=None, epochs=5, lr=0.05, bs=64):
     return head
 
 
+def probe_on(model, sd, X, Y, Xte, Yte, pool_t, P, C):
+    """Converged head-only probe (warm start from the model's own head, L-BFGS) on clean client-pool features."""
+    _, fpool = predict(model, X[pool_t], P, feats=True); _, fte = predict(model, Xte, P, feats=True)
+    hp = fit_head(fpool, Y[pool_t], sd["fc.weight"].float(), sd["fc.bias"].float(), C, "lbfgs")
+    with torch.no_grad():
+        return (hp(fte).argmax(1) == Yte).float().mean().item()
+
+
 # ----------------------------------------------------------------------------- one run
 def get_trunk(a, X, Y, pool_t, P, dev, seed, onset_step, C):
     path = os.path.join(a.trunk_cache, f"trunk_{a.dataset}_seed{seed}_onset{onset_step}_wd{a.wd}_lr{a.lr}.pt")
@@ -350,6 +358,8 @@ def run_one(a, data, source, onset_pct, seed, dev):
     with torch.no_grad(): r["acc_probe_converged"] = (hp(fte).argmax(1) == Yte).float().mean().item()
     gap = r["acc_ref"] - r["acc_merge"]
     r["head_share"] = (r["acc_probe_converged"] - r["acc_merge"]) / gap if gap > 0.005 else None
+    # Same converged probe on the no-outage reference backbone: removes the "converged head beats SGD head" bias.
+    r["acc_probe_ref"] = probe_on(mR, sdR, X, Y, Xte, Yte, pool_t, P, C)
 
     # ---- recovery: resume joint training on all client data (constant lr), from merge / Cure 2 / ref
     sdC2 = clone_sd(sdM); sdC2["fc.weight"] = h2.weight.data.clone(); sdC2["fc.bias"] = h2.bias.data.clone()

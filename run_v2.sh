@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # v2 experiment launcher. Run from the repo root:  bash run_v2.sh <phase>
-# Phases: smoke | determinism | old | core | lsweep | c100 | fl_lrtest | fl_main | analyze
+# Phases: smoke | determinism | old | core | lsweep | c100 | fl_lrtest | fl_main | backfill | analyze
 # All long phases start background jobs (nohup) and return immediately; follow with:  tail -f logs/v2_*.log
 set -euo pipefail
 DATA=${DATA:-experiments/data/cache}      # CIFAR cache (already downloaded on the workstation)
@@ -66,9 +66,15 @@ fl_main)     # T2-B: genuine FedAvg replication; set LR/MOM from fl_lrtest, WALP
         --out_dir runs/v2_fedavg > logs/v2_fedavg_s$s.log 2>&1 &
   done
   ;;
+backfill)    # reference-backbone probe for finished runs (run AFTER core/lsweep/c100 finish); 4 shards in parallel
+  for sh in 0 1 2 3; do
+    nohup $PY experiments/09_backfill_probe_ref.py --in_dirs runs/v2_core runs/v2_lsweep runs/v2_cifar100 \
+        --data_dir $DATA --shard $sh --nshards 4 > logs/v2_backfill_$sh.log 2>&1 &
+  done
+  ;;
 analyze)
   $PY experiments/summarize_v2.py --in_dirs runs/v2_core runs/v2_lsweep runs/v2_cifar100 --out_dir docs/v2
   [ -d runs/v2_fedavg ] && $PY experiments/summarize_stage5.py --in_dir runs/v2_fedavg --out_dir docs/v2_fedavg || true
   ;;
-*) echo "usage: bash run_v2.sh {smoke|determinism|old|core|lsweep|c100|fl_lrtest|fl_main|analyze}";;
+*) echo "usage: bash run_v2.sh {smoke|determinism|old|core|lsweep|c100|fl_lrtest|fl_main|backfill|analyze}";;
 esac

@@ -29,3 +29,10 @@
 
 ## 5. Specification Correction: Validation Split Sample Counts
 - **Correction:** In `PREREG_v2.md` §1, the text inadvertently described the validation split as "200 images (20/class)". The true protocol implemented in code (`make_splits`, `val_pc=200` for CIFAR-10 and `val_pc=20` for CIFAR-100) carves out **200 images per class** for CIFAR-10 (2,000 images total) and **20 images per class** for CIFAR-100 (2,000 images total).
+
+## 6. Addition of Converged Probe on Reference Backbone (`acc_probe_ref`)
+- **Addition:** Added a converged head-only probe on the no-outage reference backbone (`acc_probe_ref`).
+- **Rationale:** A converged head can exceed the standard SGD-trained head even without any outage occurring (resulting in negative residuals in short-outage IID cells). Therefore, the head/backbone decomposition is reported as:
+  - $\text{Backbone Damage} = \text{probe}(\text{ref}) - \text{probe}(\text{merge})$, and
+  - $\text{Head Damage} = \text{Penalty} - \text{Backbone Damage}$.
+- **Disposition:** Supplementary to the pre-registered H3 test. Added after viewing preliminary results ($n=3\text{--}5$).
