@@ -83,6 +83,17 @@ def main():
                                                 head_share_ratio_of_means=hs_rom, head_gain_probe_minus_merge=head_gain,
                                                 residual_ref_minus_probe=residual, head_share=hsm, **decomp, cure2_gain=ci95(d2), cure2_minus_fullft=ci95(dft), p_cure2=p2,
                                                 rho=ci95([r["rho"] for r in S]), d_pair=ci95([r["d_pair"] for r in S]))
+        # Head/body swap endpoints (from the head-only / body-only interpolation paths):
+        #   mergedBody+head_A = path_head_only[0], mergedBody+head_B = path_head_only[-1]
+        #   body_A+mergedHead = path_body_only[0], body_B+mergedHead = path_body_only[-1]
+        if all("path_head_only_acc" in r for r in S):
+            summary["|".join(map(str, k))]["swap"] = dict(
+                mergedBody_headA=ci95([100 * r["path_head_only_acc"][0] for r in S]),
+                mergedBody_headB=ci95([100 * r["path_head_only_acc"][-1] for r in S]),
+                bodyA_mergedHead=ci95([100 * r["path_body_only_acc"][0] for r in S]),
+                bodyB_mergedHead=ci95([100 * r["path_body_only_acc"][-1] for r in S]),
+                stagewise=[float(np.mean([100 * r["stagewise_merge_acc"][f"prefix_{j}"] for r in S])) for j in range(5)],
+                ensemble=float(np.mean([100 * r["acc_ensemble_full"] for r in S])))
         rows.append((k, S, pen, hsm)); cure_rows.append((k, S, ci95(d2), ci95(dft)))
     ph = holm([p if np.isfinite(p) else 1.0 for p in pvals])
     fmt = lambda m: f"{m[0]:.2f} [{m[1]:.2f}, {m[2]:.2f}]" if np.isfinite(m[1]) else f"{m[0]:.2f}"
@@ -187,6 +198,10 @@ def main():
                     f"cure2_gain={f3(v['cure2_gain'])} cure2_minus_fullft={f3(v['cure2_minus_fullft'])}"
                     + (f" | backbone={f3(v['backbone_damage'])} head={f3(v['head_damage'])} head_share_decomp={v['head_share_decomp']:.1f}"
                        if 'backbone_damage' in v else "")
+                    + (f" | swap mB+hA={v['swap']['mergedBody_headA'][0]:.1f} mB+hB={v['swap']['mergedBody_headB'][0]:.1f} "
+                       f"bA+mH={v['swap']['bodyA_mergedHead'][0]:.1f} bB+mH={v['swap']['bodyB_mergedHead'][0]:.1f} "
+                       f"ens={v['swap']['ensemble']:.1f} prefix={' '.join(f'{x:.1f}' for x in v['swap']['stagewise'])}"
+                       if 'swap' in v else "")
                     for k, v in summary.items() if not k.startswith("policy")))
     print({k: v for k, v in summary.items() if k.startswith("policy")})
 
