@@ -74,6 +74,7 @@ backfill)    # reference-backbone probe for finished runs (run AFTER core/lsweep
   ;;
 analyze)
   $PY experiments/summarize_v2.py --in_dirs runs/v2_core runs/v2_lsweep runs/v2_cifar100 --out_dir docs/v2
+  $PY experiments/prereg_tests_v2.py --in_dirs runs/v2_core runs/v2_lsweep runs/v2_cifar100 --out docs/v2/prereg_tests.json
   [ -d runs/v2_fedavg ] && $PY experiments/summarize_stage5.py --in_dir runs/v2_fedavg --out_dir docs/v2_fedavg || true
   ;;
 *) echo "usage: bash run_v2.sh {smoke|determinism|old|core|lsweep|c100|fl_lrtest|fl_main|backfill|analyze}";;

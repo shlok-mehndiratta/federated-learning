@@ -42,3 +42,19 @@
 - **Rationale:** Runtime per condition was ~40 minutes under shared GPU load, making the full 36-run grid impractical. $s=1.0$ (pathological label skew) and synthetic feature skew are deferred. Initial IID results showed a low no-outage accuracy (~49%) at 42 rounds; a longer-budget FedAvg run will be evaluated after observing the `label0.8` results.
 - **Hypothesis Coverage:** This reduced grid fully preserves the pre-registered tests for Hypothesis H7: directional replication of onset penalty reduction (H1: $k=2$ vs $k=25$) and head recalibration efficacy (H5: Cure 2 vs naive merge under `label0.8`, with `iid` as negative control).
 
+## 8. Outcome of Hypothesis H7 (Multi-Client FedAvg Replication)
+- **Status:** Recorded as **Not Confirmed**.
+- **Empirical Details:**
+  - Onset direction reproduces qualitatively but with small magnitudes (gap-to-no-outage drops from +2.00 to -2.89 points on `label0.8`, and from +0.80 to +0.21 points on `iid`).
+  - Few-Shot Head Recalibration (Cure 2) hurts performance across all FedAvg cells (mean gain of -3.17 to -4.71 points).
+  - FedAvg cohorts drift approximately $10\times$ less than Tier A ($D_{\text{pair}} \approx 0.005\text{--}0.013$ compared to $\approx 0.07\text{--}0.15$ in Tier A).
+- **Disposition:** No further FedAvg runs will be launched. Findings will be reported as an exploratory boundary condition highlighting architectural and communication differences between continuous SGD cohort branches and periodic FedAvg.
+
+## 9. Treatment of Hypothesis H4 (Class Prior Absorption)
+- **Status:** Exploratory.
+- **Detail:** Hypothesis H4 was omitted from `experiments/07_outage_v2.py` and not recomputed in the v2 pipeline. Only the historical Stage 1/3 protocol evaluation ($s=0.8$, $R^2 = 0.988$) is available. In accordance with pre-registration integrity, H4 will be presented strictly as exploratory preliminary evidence rather than a primary v2 result.
+
+## 10. Scope of Multiple Testing Correction for Cure 2 (Hypothesis H5)
+- **Clarification:** The $p_{\text{Holm}}$ values presented in `table_cures.tex` are computed over all experimental cells across all datasets and skews for broad transparency.
+- **Pre-Registered Family:** In accordance with `PREREG_v2.md` §3, the pre-registered primary testing family for Hypothesis H5 is restricted to label-skew sources (`label0.8`, `label1.0`), $k \le 2\%$, $L=5000$, evaluated within each dataset. This official primary family is evaluated and reported directly via `experiments/prereg_tests_v2.py`.
+
