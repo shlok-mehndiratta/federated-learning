@@ -36,3 +36,9 @@
   - $\text{Backbone Damage} = \text{probe}(\text{ref}) - \text{probe}(\text{merge})$, and
   - $\text{Head Damage} = \text{Penalty} - \text{Backbone Damage}$.
 - **Disposition:** Supplementary to the pre-registered H3 test. Added after viewing preliminary results ($n=3\text{--}5$).
+
+## 7. FedAvg Grid Reduction for Compute Feasibility (Hypothesis H7)
+- **Adjustment:** Multi-client FedAvg grid reduced from $\{iid, label0.8, label1.0, feature\} \times \{k=2, 10, 25\} \times 3\text{ seeds}$ (36 runs, ~8 hours) to $\{label0.8, iid\} \times \{k=2, 25\} \times 3\text{ seeds}$ (12 runs total, of which the 3 completed IID $k=2$ runs are preserved and skipped).
+- **Rationale:** Runtime per condition was ~40 minutes under shared GPU load, making the full 36-run grid impractical. $s=1.0$ (pathological label skew) and synthetic feature skew are deferred. Initial IID results showed a low no-outage accuracy (~49%) at 42 rounds; a longer-budget FedAvg run will be evaluated after observing the `label0.8` results.
+- **Hypothesis Coverage:** This reduced grid fully preserves the pre-registered tests for Hypothesis H7: directional replication of onset penalty reduction (H1: $k=2$ vs $k=25$) and head recalibration efficacy (H5: Cure 2 vs naive merge under `label0.8`, with `iid` as negative control).
+
