@@ -58,3 +58,8 @@
 - **Clarification:** The $p_{\text{Holm}}$ values presented in `table_cures.tex` are computed over all experimental cells across all datasets and skews for broad transparency.
 - **Pre-Registered Family:** In accordance with `PREREG_v2.md` §3, the pre-registered primary testing family for Hypothesis H5 is restricted to label-skew sources (`label0.8`, `label1.0`), $k \le 2\%$, $L=5000$, evaluated within each dataset. This official primary family is evaluated and reported directly via `experiments/prereg_tests_v2.py`.
 
+## 11. H6 Recovery Checkpoint Granularity & Outcome of Hypothesis H8
+- **H6 Checkpoint Granularity:** H6 recovery checkpoints start at 50 steps, so "catch-up $\le 50$ steps" is an upper bound on the actual steps required for the naive merge to match Cure 2's accuracy.
+- **Outcome of Hypothesis H8:** Hypothesis H8 is recorded as **Not Supported** (merge $-$ Cure 2 held-out regret $+0.21$ points $[-0.64, +1.05]$).
+
+

@@ -145,6 +145,28 @@ def main():
               f"after {S[0]['recovery_checkpoints'][-1]} steps cure2-merge {gap1000['mean']:+.2f} [{gap1000['lo']:+.2f}, {gap1000['hi']:+.2f}]")
     out["H6"] = h6
 
+    # ---------------- H6b (exploratory): does the outage leave a persistent cost after resumed training?
+    # persistent gap = ref_resumed(last) - merge_resumed(last); compared with the reconnection-time decomposition
+    print("\n=== H6b (exploratory): persistent gap after resumed training vs. backbone damage at reconnection")
+    h6b, xs, ys = [], [], []
+    for k in sorted(cell):
+        S = cell[k]
+        if 100 * np.mean([r["penalty"] for r in S]) < 2: continue
+        gap = paired([r["recovery_ref"][-1] for r in S], [r["recovery_merge"][-1] for r in S])
+        e = dict(cell="|".join(map(str, k)), persistent_gap=gap, penalty=100 * float(np.mean([r["penalty"] for r in S])))
+        if all("acc_probe_ref" in r for r in S):
+            bb = 100 * float(np.mean([r["acc_probe_ref"] - r["acc_probe_converged"] for r in S]))
+            e["backbone_damage_mean"] = bb; xs.append(bb); ys.append(gap["mean"])
+        h6b.append(e)
+        print(f"{e['cell']:28s} penalty {e['penalty']:6.2f} | backbone dmg {e.get('backbone_damage_mean', float('nan')):6.2f} | "
+              f"persistent gap after {S[0]['recovery_checkpoints'][-1]} steps {fmt(gap)}")
+    if len(xs) > 2:
+        rho, pr = stats.spearmanr(xs, ys); lr = stats.linregress(xs, ys)
+        print(f"across cells: Spearman(backbone damage, persistent gap) = {rho:.2f} (p={pr:.2g}); "
+              f"OLS slope {lr.slope:.2f}, intercept {lr.intercept:.2f}, R^2 {lr.rvalue**2:.2f}")
+        out["H6b_correlation"] = dict(spearman=float(rho), p=float(pr), slope=float(lr.slope), intercept=float(lr.intercept), r2=float(lr.rvalue ** 2))
+    out["H6b"] = h6b
+
     # ---------------- H8: held-out regret, Always Cure 2 vs Always merge (paired over runs), also with ensemble as an action
     print("\n=== H8 (exploratory): held-out (non-cifar10) regret")
     for tag, acts in [("without_ensemble", ACTIONS), ("with_ensemble", {**ACTIONS, "ensemble": "acc_ensemble_full"})]:
