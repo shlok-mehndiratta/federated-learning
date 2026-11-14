@@ -1,10 +1,15 @@
 """
-Analysis for v2 runs (07_outage_v2.py; optionally FedAvg runs from 06_fl_outage_validation.py).
-Every number and figure in the paper should come from this script.
+Generate summary tables and figures from experiment runs.
+
+This script aggregates result JSON files from the main experiment, the outage length
+sweep, and the CIFAR-100 runs. It computes 95% confidence intervals and produces:
+  * LaTeX tables: table_core.tex, table_cures.tex, table_policy.tex
+  * Summary metrics: summary.json
+  * Figures: fig_onset_cifar10.pdf, fig_onset_cifar100.pdf,
+             fig_length_cifar10.pdf, fig_mechanism_cifar10.pdf
 
 Usage:
-  python experiments/summarize_v2.py --in_dirs runs/v2_core runs/v2_lsweep runs/v2_cifar100 --out_dir docs/v2
-Outputs (out_dir): table_core.tex, table_cures.tex, table_policy.tex, summary.json, fig_*.pdf
+    python experiments/make_tables_and_figures.py --in_dirs runs/main runs/outage_length runs/cifar100 --out_dir results/main
 """
 import argparse, glob, json, os
 from collections import defaultdict
@@ -42,9 +47,9 @@ def load(dirs):
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--in_dirs", nargs="+", required=True)
-    ap.add_argument("--out_dir", default="docs/v2")
+    ap = argparse.ArgumentParser(description="Generate tables and figures from experiment run JSON files.")
+    ap.add_argument("--in_dirs", nargs="+", default=["runs/main", "runs/outage_length", "runs/cifar100"])
+    ap.add_argument("--out_dir", default="results/main")
     ap.add_argument("--train_dataset", default="cifar10", help="policy fit on this dataset, evaluated on the others")
     a = ap.parse_args(); os.makedirs(a.out_dir, exist_ok=True)
     R = load(a.in_dirs); print(f"{len(R)} runs")

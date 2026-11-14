@@ -1,5 +1,12 @@
-"""Summarize Stage 5 (federated validation) runs into LaTeX tables + figures.
-Usage: python experiments/summarize_stage5.py --in_dir runs/stage5_fl_validation --out_dir docs/figures
+"""
+Summarize federated averaging outage experiment runs into LaTeX tables and figures.
+
+Aggregates FedAvg run JSON files from runs/fedavg and produces:
+  * Table: table_fl_main.tex (merge outcomes, no-outage comparison, final layer recalibration)
+  * Policy comparison: table_fl_policy.tex
+
+Usage:
+    python experiments/summarize_fedavg.py --in_dir runs/fedavg --out_dir results/fedavg
 """
 import argparse, glob, json, os
 from collections import Counter
@@ -13,9 +20,9 @@ ORDER = ["iid", "label0.8", "label1.0", "feature"]
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--in_dir", default="runs/stage5_fl_validation")
-    ap.add_argument("--out_dir", default="docs/figures")
+    ap = argparse.ArgumentParser(description="Summarize FedAvg outage experiment runs.")
+    ap.add_argument("--in_dir", default="runs/fedavg")
+    ap.add_argument("--out_dir", default="results/fedavg")
     a = ap.parse_args(); os.makedirs(a.out_dir, exist_ok=True)
     R = [json.load(open(f)) for f in glob.glob(os.path.join(a.in_dir, "fl_*.json"))]
     print(f"Loaded {len(R)} runs")

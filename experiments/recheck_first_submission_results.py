@@ -1,5 +1,12 @@
-"""Re-analysis of saved Stage 2/3 per-seed results (no GPU needed).
-Outputs corrected stats, oracle labels, and triage regret."""
+"""
+Re-analyze saved results from the first submission without GPU training.
+
+Computes corrected statistics, comparisons, and decision policy accuracy
+on saved run JSON files from the first submission.
+
+Usage:
+    python experiments/recheck_first_submission_results.py [runs_dir]
+"""
 import json, glob, os, sys
 import numpy as np
 from scipy import stats

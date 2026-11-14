@@ -1,9 +1,16 @@
 """
-Pre-registered tests H1, H2, H3, H5, H6, H8 computed directly from the v2 run JSONs (Tier A).
-Every number reported for a hypothesis in the paper must come from this script's output.
+Statistical tests for project hypotheses computed directly from experiment run JSON files.
+
+Evaluates hypotheses from PLANNED_TESTS.md:
+  * H1: Outage start effect on merge penalty (fixed outage length L = 5000)
+  * H2: Outage length effect on merge penalty (fixed start k = 2%)
+  * H3: Decomposition of merge penalty (damage to final layer vs rest of network)
+  * H5: Gain from retraining the final layer (Cure 2 vs naive merge)
+  * H6 / H6b: Recovery after reconnection (persistent gap vs backbone damage)
+  * H8: Reconnection decision policy regret
 
 Usage:
-  python experiments/prereg_tests_v2.py --in_dirs runs/v2_core runs/v2_lsweep runs/v2_cifar100 --out docs/v2/prereg_tests.json
+    python experiments/check_hypotheses.py --in_dirs runs/main runs/outage_length runs/cifar100 --out results/main/prereg_tests.json
 """
 import argparse, glob, json, os
 from collections import defaultdict
@@ -47,9 +54,9 @@ def fmt(r):
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--in_dirs", nargs="+", required=True)
-    ap.add_argument("--out", default="docs/v2/prereg_tests.json")
+    ap = argparse.ArgumentParser(description="Evaluate planned hypothesis tests on experiment run JSON files.")
+    ap.add_argument("--in_dirs", nargs="+", default=["runs/main", "runs/outage_length", "runs/cifar100"])
+    ap.add_argument("--out", default="results/main/prereg_tests.json")
     ap.add_argument("--core_L", type=int, default=5000)
     ap.add_argument("--h2_onset", type=float, default=2.0)
     a = ap.parse_args()
