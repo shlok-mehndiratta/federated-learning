@@ -2,7 +2,7 @@
 
 **Document Date:** November 16, 2026  
 **Repository Branch:** `v2`  
-**Purpose:** Formal audit trail of any departures from or refinements to `PREREG_v2.md` and `WORKSHOP_READINESS_PLAN.md`.
+**Purpose:** Formal audit trail of any departures from or refinements to `PLANNED_TESTS.md`.
 
 ---
 
@@ -28,7 +28,7 @@
   Head share is reported strictly as a ratio of means ($\frac{\overline{\text{probe}} - \overline{\text{merge}}}{\overline{\text{ref}} - \overline{\text{merge}}}$), and evaluated only in cells where the empirical merge penalty is non-negligible ($\ge 2.0$ points).
 
 ## 5. Specification Correction: Validation Split Sample Counts
-- **Correction:** In `PREREG_v2.md` §1, the text inadvertently described the validation split as "200 images (20/class)". The true protocol implemented in code (`make_splits`, `val_pc=200` for CIFAR-10 and `val_pc=20` for CIFAR-100) carves out **200 images per class** for CIFAR-10 (2,000 images total) and **20 images per class** for CIFAR-100 (2,000 images total).
+- **Correction:** In `PLANNED_TESTS.md` §1, the text inadvertently described the validation split as "200 images (20/class)". The true protocol implemented in code (`make_splits`, `val_pc=200` for CIFAR-10 and `val_pc=20` for CIFAR-100) carves out **200 images per class** for CIFAR-10 (2,000 images total) and **20 images per class** for CIFAR-100 (2,000 images total).
 
 ## 6. Addition of Converged Probe on Reference Backbone (`acc_probe_ref`)
 - **Addition:** Added a converged head-only probe on the no-outage reference backbone (`acc_probe_ref`).
@@ -52,11 +52,11 @@
 
 ## 9. Treatment of Hypothesis H4 (Class Prior Absorption)
 - **Status:** Exploratory.
-- **Detail:** Hypothesis H4 was omitted from `experiments/07_outage_v2.py` and not recomputed in the v2 pipeline. Only the historical Stage 1/3 protocol evaluation ($s=0.8$, $R^2 = 0.988$) is available. In accordance with pre-registration integrity, H4 will be presented strictly as exploratory preliminary evidence rather than a primary v2 result.
+- **Detail:** Hypothesis H4 was omitted from `experiments/run_outage_experiment.py` and not recomputed in the v2 pipeline. Only the historical Stage 1/3 protocol evaluation ($s=0.8$, $R^2 = 0.988$) is available. In accordance with pre-registration integrity, H4 will be presented strictly as exploratory preliminary evidence rather than a primary v2 result.
 
 ## 10. Scope of Multiple Testing Correction for Cure 2 (Hypothesis H5)
 - **Clarification:** The $p_{\text{Holm}}$ values presented in `table_cures.tex` are computed over all experimental cells across all datasets and skews for broad transparency.
-- **Pre-Registered Family:** In accordance with `PREREG_v2.md` §3, the pre-registered primary testing family for Hypothesis H5 is restricted to label-skew sources (`label0.8`, `label1.0`), $k \le 2\%$, $L=5000$, evaluated within each dataset. This official primary family is evaluated and reported directly via `experiments/prereg_tests_v2.py`.
+- **Pre-Registered Family:** In accordance with `PLANNED_TESTS.md` §3, the pre-registered primary testing family for Hypothesis H5 is restricted to label-skew sources (`label0.8`, `label1.0`), $k \le 2\%$, $L=5000$, evaluated within each dataset. This official primary family is evaluated and reported directly via `experiments/check_hypotheses.py`.
 
 ## 11. H6 Recovery Checkpoint Granularity & Outcome of Hypothesis H8
 - **H6 Checkpoint Granularity:** H6 recovery checkpoints start at 50 steps, so "catch-up $\le 50$ steps" is an upper bound on the actual steps required for the naive merge to match Cure 2's accuracy.
