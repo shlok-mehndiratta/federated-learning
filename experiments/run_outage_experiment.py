@@ -1,21 +1,24 @@
 """
-v2 core study (replaces science_harness.py for all new results).
+Core experiment runner for simulated coordinator outages.
 
-Fixes relative to science_harness.py / 02 / 03:
-  * Fixed-length outage: trunk -> onset k, branches run exactly L steps, merge at k+L
-    (old code: branch_steps = total - onset, so onset and outage length were confounded).
-  * No-outage reference: the trunk continues on all client data for the same L steps with the
-    same LR schedule; every penalty is measured against it.
-  * Server-held calibration pool and validation split, carved out BEFORE partitioning (disjoint
-    from all client data). Test set used only for final numbers; cure hyper-parameters picked on val.
-  * Deterministic kernels and explicit generators.
-  * Converged head-only probe (warm start + L-BFGS on clean client features).
-  * Correct stage-wise partial merges (old version mapped every body parameter to stage 0).
-  * Head-only and body-only interpolation paths (replace the misread finite-difference curvature).
-  * Baselines: best branch (chosen on val), full-output ensemble, decoupled heads, Cure 1 (tau on val),
-    Cure 2 (head, 200 server images), Cure 2 tuned on val, full-model fine-tune on the same 200 images,
-    and recovery curves (resume joint training from merge / Cure 2 / no-outage).
-  * Corruptions applied in [0,1] pixel space BEFORE normalization.
+This script evaluates what happens when a network outage forces two training
+cohorts to train in isolation for a fixed number of steps (L) starting at step k,
+compared against a reference model trained continuously on all data without an outage.
+
+Terms used in code:
+  * Outage start (onset_pct / k): percentage of total training steps before the outage.
+  * Outage length (L): number of isolated training steps per cohort during the outage.
+  * No-outage model (ref): trained continuously on all data for the same number of steps.
+  * Merged model (acc_merge): simple average of weights from cohort A and cohort B.
+  * Final layer recalibration (acc_cure2): retrains only the classification layer on 200 server images.
+  * Full fine-tuning (acc_cure2_fullft): fine-tunes the entire network on the same 200 server images.
+  * Diagnostic probe (acc_probe_converged): converged classifier on frozen features to test representation quality.
+
+Reads: CIFAR-10 or CIFAR-100 dataset from --data_dir.
+Writes: JSON files containing evaluation metrics and recovery curves to --out_dir.
+
+Example:
+  python experiments/run_outage_experiment.py --dataset cifar10 --sources label0.8 --onsets 2 --L 5000 --seeds 42 --out_dir runs/main --data_dir data/cache
 """
 import os
 os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
@@ -391,8 +394,8 @@ def main():
     ap.add_argument("--recovery_lr", type=float, default=0.02)
     ap.add_argument("--recovery_checkpoints", nargs="+", type=int, default=[50, 100, 250, 500, 1000])
     ap.add_argument("--data_dir", default="./data/cache")
-    ap.add_argument("--trunk_cache", default="./runs/v2_trunk_cache")
-    ap.add_argument("--out_dir", default="./runs/v2_core")
+    ap.add_argument("--trunk_cache", default="./runs/trunk_cache")
+    ap.add_argument("--out_dir", default="./runs/main")
     a = ap.parse_args()
     dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     set_determinism(); os.makedirs(a.out_dir, exist_ok=True)

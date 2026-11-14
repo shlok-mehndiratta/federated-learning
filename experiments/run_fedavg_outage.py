@@ -1,17 +1,23 @@
 """
-Stage 5: Federated validation of the outage findings (true FedAvg, 10 clients, 2 cohorts).
+Federated learning outage experiment (10 clients, 2 cohorts).
 
-Protocol per run (source, onset k, seed):
-  1. Pre-outage FedAvg over all 10 clients for k rounds  -> W_k
-  2a. Outage: cohort A (clients 0-4) and cohort B (clients 5-9) each run FedAvg internally
-      for L rounds with zero cross-cohort communication  -> W_A, W_B
-  2b. Counterfactual "no outage": global FedAvg from W_k for L rounds  -> W_ref
-  3. Reconnection: naive merge, Cure 2 (head-only recalibration on a SERVER-HELD set that is
-     disjoint from every client's data), output ensemble, diagnostic linear probe.
-  4. Recovery: resume global FedAvg for R rounds from (a) naive merge, (b) Cure-2 model,
-     and continue the no-outage reference for R rounds; log accuracy every round.
+This script simulates a coordinator outage in a federated learning network where
+10 clients train with local SGD and periodic FedAvg aggregation. During an outage,
+the network splits into two isolated 5-client cohorts that continue aggregating locally.
 
-Data is preloaded to the GPU and augmented on the GPU, so one run takes ~1-2 minutes.
+Terms used in code:
+  * Outage start (onset rounds k): global communication rounds before the outage.
+  * Outage length (L): communication rounds conducted within each isolated cohort.
+  * Recovery rounds (R): global communication rounds resumed after reconnection.
+  * No-outage model (ref): global FedAvg continued without communication interruption.
+  * Merged model (acc_naive): simple parameter average of the two cohort models upon reconnection.
+  * Final layer recalibration (cure2): retrains only the classification layer on 200 server images.
+
+Reads: CIFAR-10 dataset from --data_dir.
+Writes: JSON files with communication telemetry and round-by-round accuracies to --out_dir.
+
+Example:
+  python experiments/run_fedavg_outage.py --sources label0.8 iid --onsets 2 25 --L 40 --R 10 --local_steps 20 --batch_size 128 --lr 0.03 --momentum 0.9 --seeds 42 --data_dir data/cache --out_dir runs/fedavg
 """
 import argparse, json, os, sys, time
 from copy import deepcopy
@@ -267,7 +273,7 @@ def main():
     ap.add_argument("--within_alpha", type=float, default=None, help="Dirichlet alpha across clients inside each cohort (None = IID)")
     ap.add_argument("--amp", type=int, default=1, help="bf16 autocast for local training")
     ap.add_argument("--data_dir", default="./data/cache")
-    ap.add_argument("--out_dir", default="./runs/stage5_fl_v2")
+    ap.add_argument("--out_dir", default="./runs/fedavg")
     ap.add_argument("--fake_data", action="store_true", help="smoke test without CIFAR download")
     args = ap.parse_args()
     dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
