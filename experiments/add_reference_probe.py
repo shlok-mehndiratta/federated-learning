@@ -1,18 +1,14 @@
 """
-Backfill `acc_probe_ref` (converged head-only probe on the NO-OUTAGE reference backbone) into finished
-v2 JSONs that were produced before 07_outage_v2.py computed it.
+Add reference backbone probes to finished experiment runs.
 
-Why: head share = (probe(merge) - merge) / (ref - merge) mixes two things, because a converged L-BFGS head
-can beat the SGD-trained head even with no outage (seen as negative "residual" in short-outage IID cells).
-The clean decomposition is
-    backbone damage = probe(ref) - probe(merge)
-    head damage     = penalty - backbone damage
-which needs probe(ref).
+This script retrains the no-outage reference model for completed runs and computes
+the reference probe accuracy (acc_probe_ref). This allows cleanly separating
+damage to the final layer from damage to the rest of the network:
+    damage to rest of network = probe(no-outage) - probe(merged)
+    damage to final layer     = penalty - damage to rest of network
 
-How: re-trains ONLY the reference arm (deterministic: same cached trunk, same generator seed as in 07),
-checks that it reproduces the stored acc_ref exactly, then runs the probe. Cost ~1/4 of a full run.
-Usage (repo root, after the main runs have finished or in parallel):
-  python experiments/09_backfill_probe_ref.py --in_dirs runs/v2_core runs/v2_lsweep runs/v2_cifar100 --data_dir data/cache
+Usage:
+    python experiments/add_reference_probe.py --in_dirs runs/main runs/outage_length runs/cifar100 --data_dir data/cache
 """
 import os
 os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
@@ -22,16 +18,16 @@ import torch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..")))
-spec = importlib.util.spec_from_file_location("v2", os.path.join(HERE, "07_outage_v2.py"))
+spec = importlib.util.spec_from_file_location("outage_exp", os.path.join(HERE, "run_outage_experiment.py"))
 v2 = importlib.util.module_from_spec(spec); spec.loader.exec_module(v2)
 from fl_outage.models.resnet import ResNet20LN
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--in_dirs", nargs="+", required=True)
+    ap = argparse.ArgumentParser(description="Add reference backbone probe accuracy to completed runs.")
+    ap.add_argument("--in_dirs", nargs="+", default=["runs/main", "runs/outage_length", "runs/cifar100"])
     ap.add_argument("--data_dir", default="./data/cache")
-    ap.add_argument("--shard", type=int, default=0, help="process only files with index %% nshards == shard")
+    ap.add_argument("--shard", type=int, default=0, help="process only files with index % nshards == shard")
     ap.add_argument("--nshards", type=int, default=1)
     cli = ap.parse_args()
     dev = torch.device("cuda" if torch.cuda.is_available() else "cpu"); v2.set_determinism()

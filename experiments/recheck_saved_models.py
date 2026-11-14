@@ -1,14 +1,14 @@
 """
-Re-analyze the EXISTING Stage 1 / Stage 3 branch endpoints (*_branchA.pt / *_branchB.pt) with the
-corrected diagnostics, without any retraining (~1 min per pair):
-  * stage-wise partial merges with the correct parameter->stage mapping and softmax ensembling
-    (the old evaluate_cumulative_partial_merges mapped every body parameter to stage 0 and averaged
-    logits, so every prefix equalled the full merge);
-  * head-only and body-only interpolation paths;
-  * converged head-only probe (warm start + L-BFGS) on all 50k clean training images;
-  * full-output ensemble.
-Usage (repo root):
-  python experiments/08_reanalyze_old_endpoints.py --model_dirs runs/stage1_science runs/stage3_feature_skew
+Re-analyze saved model checkpoints from earlier experiments.
+
+Evaluates saved checkpoint pairs (*_branchA.pt / *_branchB.pt) with corrected diagnostics:
+  * Stage-wise partial weight merges
+  * Final layer and body interpolation paths
+  * Converged final layer probe on training images
+  * Model ensemble
+
+Usage:
+    python experiments/recheck_saved_models.py --model_dirs runs/stage1_science runs/stage3_feature_skew
 """
 import os
 os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
@@ -17,13 +17,13 @@ import torch, torch.nn.functional as F
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..")))
-spec = importlib.util.spec_from_file_location("v2", os.path.join(HERE, "07_outage_v2.py"))
+spec = importlib.util.spec_from_file_location("outage_exp", os.path.join(HERE, "run_outage_experiment.py"))
 v2 = importlib.util.module_from_spec(spec); spec.loader.exec_module(v2)
 from fl_outage.models.resnet import ResNet20LN
 
 
 def main():
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(description="Re-evaluate saved branch checkpoints from earlier runs.")
     ap.add_argument("--model_dirs", nargs="+", required=True)
     ap.add_argument("--data_dir", default="./data/cache")
     ap.add_argument("--out", default="runs/old_endpoints_reanalysis.json")
