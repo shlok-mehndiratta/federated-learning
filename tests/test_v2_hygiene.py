@@ -5,7 +5,7 @@ import numpy as np
 
 from fl_outage.models.resnet import ResNet20LN
 import importlib
-outage_v2 = importlib.import_module("experiments.07_outage_v2")
+outage_v2 = importlib.import_module("experiments.run_outage_experiment")
 stage_of = outage_v2.stage_of
 make_splits = outage_v2.make_splits
 Pipe = outage_v2.Pipe
