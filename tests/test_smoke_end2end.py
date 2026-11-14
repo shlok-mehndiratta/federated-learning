@@ -13,8 +13,9 @@ from fl_outage.metrics.distances import compute_normalized_distances
 from fl_outage.metrics.curvature import compute_curvature_barrier_estimate
 
 
+# end-to-end smoke test for federated cycle
 def test_smoke_end_to_end_cycle():
-    """Gate G0 Test 5: Complete end-to-end cycle executes cleanly and logs every metric."""
+    """Complete end-to-end cycle executes cleanly and logs every metric."""
     torch.manual_seed(42)
 
     # Synthetic dataset with 80 samples

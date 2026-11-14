@@ -1,5 +1,5 @@
 """
-Unit tests for Stage 2 Head Cures runner and decomposition pipeline.
+Unit tests for Stage 2 Head Cures runner and decomposition pipeline in federated learning.
 Verifies:
 1. create_few_shot_calibration_loader builds exactly 20 samples per class (200 total).
 2. evaluate_stage2_mechanisms completes end-to-end without shape errors on ResNet20LN.

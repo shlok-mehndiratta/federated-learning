@@ -13,13 +13,14 @@ def interpolate_weights(model_A: nn.Module, model_B: nn.Module, alpha: float) ->
     params_A = model_A.state_dict()
     params_B = model_B.state_dict()
 
+    # linearly interploate weights at interpolation ratio alpha
     for k in params_A.keys():
         val_A = params_A[k]
         val_B = params_B[k]
         if torch.is_floating_point(val_A):
             state_dict[k] = (1.0 - alpha) * val_A + alpha * val_B
         else:
-            # For integer buffers
+            # keep integer buffers and non-floating paramaters intact
             state_dict[k] = val_A
     return state_dict
 
@@ -73,6 +74,7 @@ def compute_linear_barrier(
     eval_model = deepcopy(model_A).to(device)
     criterion = nn.CrossEntropyLoss()
 
+    # evaluate model performance across all interpolation points
     for alpha in alphas:
         interp_state = interpolate_weights(model_A, model_B, alpha)
         eval_model.load_state_dict(interp_state)
@@ -83,6 +85,7 @@ def compute_linear_barrier(
     loss_0 = losses[0]
     loss_1 = losses[-1]
 
+    # calulate endpoint-relative loss barrier
     barriers = [
         loss - ((1.0 - alpha) * loss_0 + alpha * loss_1)
         for alpha, loss in zip(alphas, losses)
@@ -90,7 +93,7 @@ def compute_linear_barrier(
     max_barrier = max(barriers)
     max_idx = barriers.index(max_barrier)
 
-    # Error / Accuracy barrier (dip below linear path)
+    # error / accuracy barrier (maximum dip below linear baseline)
     acc_0 = accs[0]
     acc_1 = accs[-1]
     acc_dips = [

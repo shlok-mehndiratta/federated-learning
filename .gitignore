@@ -2,15 +2,18 @@
 .venv/
 env/
 venv/
+ENV/
 
-# Python cache
+# Python cache & build
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 *.egg-info/
+build/
+dist/
 
-# Experiment checkpoints & heavy caches
+# Experiment checkpoints & data cache
 checkpoints/
 data/cache/
 *.pt
@@ -18,30 +21,24 @@ data/cache/
 *.tar
 *.ckpt
 
-# Allow tracking of experimental data, logs, and plots
+# Allow tracking of structured experimental summaries and figures
 !runs/
 !runs/**
 *.log
 
-# Testing and IDE
+# IDE & testing
+.vscode/
+.idea/
 .pytest_cache/
 .coverage
 htmlcov/
-.vscode/
-.idea/
+*.swp
+*~
 
-# Wandb
+# Experiment trackers & external dependencies
 wandb/
-
-# Reference repository (cloned external)
 external/
 
-# Documentation, plans, and private research notes (NEVER sync to GitHub)
-docs/
+# Build artifacts
+docs/_build/
 *.pdf
-DECISION_LOG.md
-PREREGISTRATION.md
-EMPIRICAL_FINDINGS.md
-*GUIDE*.md
-*plan*.md
-

@@ -24,20 +24,24 @@ def merge_models(
     merged_model = deepcopy(model_A)
 
     if rule == "plain_avg":
+        # standard 50/50 parameter averaging between the two branches
         avg_state = average_model_weights([model_A.state_dict(), model_B.state_dict()])
         merged_model.load_state_dict(avg_state)
     elif rule == "anchored":
+        # blend with anchor trunk checkpoint to pull weights closer to pre-outage basin
         assert anchor_model is not None, "anchor_model must be provided for anchored merging"
         avg_AB = average_model_weights([model_A.state_dict(), model_B.state_dict()])
         state_k = anchor_model.state_dict()
         anchored_state = OrderedDict()
         for k in avg_AB.keys():
+            # make sure non-floating point paramaters stay untouched
             if torch.is_floating_point(avg_AB[k]):
                 anchored_state[k] = anchor_weight * state_k[k] + (1.0 - anchor_weight) * avg_AB[k]
             else:
                 anchored_state[k] = avg_AB[k]
         merged_model.load_state_dict(anchored_state)
     elif rule == "discard":
+        # discard lagging branch and revert directly to anchor
         assert anchor_model is not None, "anchor_model must be provided for discard rule"
         merged_model.load_state_dict(anchor_model.state_dict())
     else:

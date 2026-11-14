@@ -5,12 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fl-outage"
 version = "0.1.0"
-description = "When Can Federated Learning Survive Its Server? Isolation, Onset and Heterogeneity in Branch-and-Merge Recovery"
+description = "Surviving the Outage: Loss Barriers, Representation Geometry, and Autonomous Recovery in Federated Model Merging"
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [
-    { name = "Anmol", email = "anmol@example.com" }
-]
 dependencies = [
     "torch>=2.0.0",
     "torchvision>=0.15.0",

@@ -263,13 +263,9 @@ def run_milestone3(
     cache_dir = os.path.join(output_dir, "global_checkpoints")
     checkpoint_rounds = sorted(list(set(k_levels)))
 
-    # =========================================================================
-    # WAVE 1: CORE FACTORIAL GRID
-    # =========================================================================
+    # Wave 1: Core factorial grid sweep over onset and heterogeneity
     if wave in ("1", "all"):
-        print("\n" + "=" * 80)
-        print("WAVE 1: CORE FACTORIAL GRID SWEEP")
-        print("=" * 80)
+        print("\nStarting Wave 1: core factorial grid sweep...")
 
         for seed in seeds:
             print(f"\n---> [Wave 1] Processing Seed {seed}...")
@@ -376,13 +372,9 @@ def run_milestone3(
 
                         print(f"    --> Barrier: {eval_res['loss_barrier']:.4f} | Acc Dip: {eval_res['max_acc_dip']*100:.2f}% | Merged Acc: {eval_res['merged_acc']*100:.2f}% | RTB: {eval_res['rtb']}", flush=True)
 
-    # =========================================================================
-    # WAVE 2: DURATION SENSITIVITY & START-TYPE CONTRAST
-    # =========================================================================
+    # Wave 2: Outage duration sensitivity and start-type contrast
     if wave in ("2", "all"):
-        print("\n" + "=" * 80)
-        print("WAVE 2: OUTAGE DURATION & START-TYPE CONTRAST")
-        print("=" * 80)
+        print("\nStarting Wave 2: outage duration & start-type contrast...")
 
         # Part A: Outage Duration Sensitivity
         for seed in seeds:

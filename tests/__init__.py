@@ -1,1 +1,1 @@
-# Test suite for fl_outage
+# Test suite for federated learning outage recovery

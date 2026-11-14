@@ -1,4 +1,4 @@
-"""Automated unit tests for statistical modeling engine."""
+"""Automated unit tests for statistical modeling engine in federated learning."""
 
 import numpy as np
 import pytest

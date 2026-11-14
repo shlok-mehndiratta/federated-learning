@@ -1,4 +1,4 @@
-"""Unit tests for Milestone 4 mechanisms, representational analysis (CKA), and recovery acceleration."""
+"""Unit tests for mechanistic diagnostic probes, representational analysis (CKA), and recovery acceleration."""
 
 import numpy as np
 import pytest

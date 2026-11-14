@@ -12,6 +12,7 @@ class ResNetBlock(nn.Module):
 
     def __init__(self, in_channels: int, out_channels: int, downsample: bool = False):
         super().__init__()
+        # using layernorm instead of batchnorm so client running stats dont diverge
         stride = 2 if downsample else 1
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
         self.norm1 = LayerNorm2d(out_channels)
@@ -21,6 +22,7 @@ class ResNetBlock(nn.Module):
         self.norm2 = LayerNorm2d(out_channels)
         self.act2 = nn.ReLU(inplace=True)
 
+        # skip connection shortcut matching dimensions
         if downsample or in_channels != out_channels:
             self.shortcut = nn.Sequential(OrderedDict([
                 ('conv', nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False)),
@@ -30,6 +32,7 @@ class ResNetBlock(nn.Module):
             self.shortcut = nn.Identity()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # foward pass through convs and add residual skip
         out = self.act1(self.norm1(self.conv1(x)))
         out = self.norm2(self.conv2(out))
         out = out + self.shortcut(x)
@@ -46,7 +49,7 @@ class ResNet20LN(nn.Module):
     - Stage 3: 3 blocks (64 filters, first block downsamples stride 2)
     - Global Average Pooling -> Linear (64 -> num_classes)
     
-    Total parameters for num_classes=10: 272,474 (exact match to ICML 2025).
+    Total paramaters for num_classes=10: 272,474.
     """
 
     def __init__(self, num_classes: int = 10, width_base: int = 16):
@@ -72,9 +75,11 @@ class ResNet20LN(nn.Module):
         self.stages = nn.Sequential(*blocks)
 
         self.fc = nn.Linear(curr_filters, num_classes)
+        # initialize weights before trainning
         self.reset_parameters()
 
     def reset_parameters(self):
+        # standard kaiming initializtion for conv weights
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
@@ -86,8 +91,10 @@ class ResNet20LN(nn.Module):
                 m.reset_parameters()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # pass through initial conv and 3 residual stages
         out = self.init_act(self.init_norm(self.init_conv(x)))
         out = self.stages(out)
+        # global average pooling before classification head
         out = F.adaptive_avg_pool2d(out, (1, 1)).flatten(1)
         return self.fc(out)
 

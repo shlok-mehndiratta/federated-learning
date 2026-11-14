@@ -6,8 +6,9 @@ from fl_outage.models.resnet import ResNet20LN
 from fl_outage.fl.outage import OutageSimulator
 
 
+# verify group parameter isolation invariant under I0
 def test_isolation_group_A_invariant_to_group_B():
-    """Gate G0 Test 4: Under isolation I0, Group A's parameters do not depend on Group B's data."""
+    """Under isolation I0, Group A's parameters do not depend on Group B's data."""
     torch.manual_seed(42)
 
     # Base dataset of 60 samples

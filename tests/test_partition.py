@@ -4,8 +4,9 @@ import pytest
 from fl_outage.data.partition import partition_dataset, compute_group_class_proportions
 
 
+# verify disjoint and non-iid partition properties
 def test_partition_s1_is_disjoint():
-    """Gate G0 Test 3a: At s=1.0, Group A and Group B must have strictly disjoint classes."""
+    """At s=1.0, Group A and Group B must have strictly disjoint classes."""
     num_classes = 10
     samples_per_class = 200
     targets = np.repeat(np.arange(num_classes), samples_per_class)

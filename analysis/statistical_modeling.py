@@ -223,9 +223,7 @@ def run_confirmatory_hypothesis_tests(
     """Executes pre-registered hypothesis testing with Holm-Bonferroni correction."""
     tests_summary = []
 
-    # -------------------------------------------------------------------------
     # H1: In-Task FL Server vs Generic Pre-training (CIFAR-100)
-    # -------------------------------------------------------------------------
     wave2_start = factorial_data.get("wave2_start_type", [])
     # Pair by (seed, s, outage_length) for s=1.0
     lookup_intask = {}
@@ -262,9 +260,7 @@ def run_confirmatory_hypothesis_tests(
         "direction": "In-Task > Generic"
     })
 
-    # -------------------------------------------------------------------------
     # H2: Critical Onset Threshold (k=0 vs k=2, s=1.0, I0 matched across all runs)
-    # -------------------------------------------------------------------------
     wave1 = factorial_data.get("wave1", [])
     wave2_dur = factorial_data.get("wave2_duration", [])
 
@@ -303,9 +299,7 @@ def run_confirmatory_hypothesis_tests(
         "direction": "k=0 dip > k=2 dip"
     })
 
-    # -------------------------------------------------------------------------
     # H3: Coupling Effect (Isolation I0 vs Sparse Coupling I1 across s >= 0.8)
-    # -------------------------------------------------------------------------
     i0_map = {}
     i1_map = {}
     for r in wave1:
@@ -338,9 +332,7 @@ def run_confirmatory_hypothesis_tests(
         "direction": "I0 dip > I1 dip"
     })
 
-    # -------------------------------------------------------------------------
     # H4: Hessian Curvature Incremental Predictor (Nested F-test on all Wave 1)
-    # -------------------------------------------------------------------------
     d_pair = np.array([r["d_pair"] for r in wave1], dtype=np.float64)
     kappa = np.array([r["curvature_est"] for r in wave1], dtype=np.float64)
     acc_dip = np.array([r["max_acc_dip"] * 100.0 for r in wave1], dtype=np.float64)
@@ -366,9 +358,7 @@ def run_confirmatory_hypothesis_tests(
         "direction": "R2(dist + kappa) > R2(dist)"
     })
 
-    # -------------------------------------------------------------------------
     # Holm-Bonferroni Family-Wise Error Rate Control (alpha = 0.05)
-    # -------------------------------------------------------------------------
     m = len(tests_summary)
     # Sort tests by raw p-value ascending
     indices = sorted(range(m), key=lambda i: tests_summary[i]["p_value_raw"])

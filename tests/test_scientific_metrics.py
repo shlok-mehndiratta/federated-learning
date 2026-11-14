@@ -1,5 +1,5 @@
 """
-Automated unit tests for scientific metrics and partitioning engine.
+Automated unit tests for scientific metrics and partitioning engine in federated learning.
 Verifies:
 1. Identical models yield zero barrier and zero D_pair.
 2. Symmetric pure logit-offset pair cancels out under averaging.

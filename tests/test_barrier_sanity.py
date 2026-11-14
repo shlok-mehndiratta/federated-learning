@@ -8,8 +8,9 @@ from fl_outage.metrics.barrier import compute_linear_barrier
 from fl_outage.metrics.curvature import compute_curvature_barrier_estimate
 
 
+# verify barrier computation properties between identical and perturbed models
 def test_barrier_self_is_zero():
-    """Gate G0 Test 2: Barrier between a model and itself is identically zero."""
+    """Barrier between a model and itself is identically zero."""
     torch.manual_seed(42)
     model = ResNet20LN(num_classes=10, width_base=4)
 

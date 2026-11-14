@@ -233,9 +233,7 @@ def run_mechanism_diagnostic(
     dist_res = compute_normalized_distances(mA, mB, model_anchor=base_model)
     curvature_est = compute_curvature_barrier_estimate(mA, mB, eval_loader, device=device)
 
-    # -------------------------------------------------------------------------
-    # PROBE 1: Layer-Wise Barrier Decomposition
-    # -------------------------------------------------------------------------
+    # Probe 1: Layer-Wise Barrier Decomposition across conv stages and linear head
     print("--> Running Probe 1: Layer-Wise Barrier Decomposition...", flush=True)
     layer_barrier_res = compute_layer_wise_barrier_profile(
         mA, mB, eval_loader,
@@ -243,9 +241,7 @@ def run_mechanism_diagnostic(
         device=device
     )
 
-    # -------------------------------------------------------------------------
-    # PROBE 2: Representational Similarity Analysis (Linear CKA)
-    # -------------------------------------------------------------------------
+    # Probe 2: Representational Similarity Analysis using Linear CKA
     print("--> Running Probe 2: Linear CKA Representational Alignment...", flush=True)
     cka_res = compute_stage_cka_summary(
         mA, mB, eval_loader,
@@ -253,17 +249,13 @@ def run_mechanism_diagnostic(
         max_samples=1000 if not quick_test else 100
     )
 
-    # -------------------------------------------------------------------------
-    # PROBE 3: Per-Class Accuracy & Confusion Attribution
-    # -------------------------------------------------------------------------
+    # Probe 3: Per-Class Accuracy and Confusion Matrix Attribution
     print("--> Running Probe 3: Class Confusion Attribution & Entropy...", flush=True)
     conf_A = evaluate_confusion_and_entropy(mA, eval_loader, device)
     conf_B = evaluate_confusion_and_entropy(mB, eval_loader, device)
     conf_merged = evaluate_confusion_and_entropy(m_merged, eval_loader, device)
 
-    # -------------------------------------------------------------------------
-    # PROBE 4: Post-Merge Recovery Acceleration
-    # -------------------------------------------------------------------------
+    # Probe 4: Post-Merge Recovery Acceleration
     print("--> Running Probe 4A: Baseline Standard FedAvg Recovery...", flush=True)
     rec_standard = run_recovery_evaluation(
         merged_model=m_merged,

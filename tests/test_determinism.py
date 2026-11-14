@@ -6,8 +6,9 @@ from fl_outage.models.resnet import ResNet20LN
 from fl_outage.fl.server import FederatedServer
 
 
+# verifies training determinism across identical random seeds
 def test_server_training_determinism():
-    """Gate G0 Test 1: Two identical runs with the same seed yield bitwise identical model weights."""
+    """Two identical runs with the same seed yield bitwise identical model weights."""
     torch.manual_seed(42)
 
     # Synthetic toy dataset of 50 samples

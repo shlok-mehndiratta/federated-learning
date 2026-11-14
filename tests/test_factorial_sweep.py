@@ -1,4 +1,4 @@
-"""Unit tests for Milestone 3: Factorial Sweeps, Coupling Modes, and Model Pretraining."""
+"""Unit tests for Factorial Sweeps, Coupling Modes, and Model Pretraining."""
 
 import pytest
 import torch

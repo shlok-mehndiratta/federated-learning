@@ -148,9 +148,7 @@ def run_anchors(
         targets, num_classes=10, s=0.8, alpha=1.0, num_clients_per_group=10, seed=args.seed
     )
 
-    # -------------------------------------------------------------
-    # Anchor V3b: Zhu et al. setting (k=0, s=0.8, I0, DIFFERENT inits)
-    # -------------------------------------------------------------
+    # Anchor V3b: Setting with different random inits (k=0, s=0.8, I0)
     v3b_key = ("anchor_v3b", 0, 0.8, "I0", "different_inits")
     if v3b_key in completed_keys:
         print(f"--> [Anchor V3b] Already completed. Skipping.", flush=True)
@@ -212,9 +210,7 @@ def run_anchors(
 
         print(f"    --> V3b (Different Inits): Loss Barrier: {res_v3b['loss_barrier']:.4f} | Merged Acc: {res_v3b['merged_acc']*100:.2f}% | RTB: {res_v3b['rtb']}", flush=True)
 
-    # -------------------------------------------------------------
-    # Anchor V3a: Our counterpart (k=0, s=0.8, I0, SHARED init)
-    # -------------------------------------------------------------
+    # Anchor V3a: Shared initialization counterpart (k=0, s=0.8, I0)
     v3a_key = ("anchor_v3a", 0, 0.8, "I0", "shared_init")
     if v3a_key in completed_keys:
         print(f"--> [Anchor V3a] Already completed. Skipping.", flush=True)
@@ -272,9 +268,7 @@ def run_anchors(
 
         print(f"    --> V3a (Shared Init): Loss Barrier: {res_v3a['loss_barrier']:.4f} | Merged Acc: {res_v3a['merged_acc']*100:.2f}% | RTB: {res_v3a['rtb']}", flush=True)
 
-    # -------------------------------------------------------------
-    # Anchor V4: Randl reproduction (k=5, s=0.8, Gossip I2 vs Isolated I0)
-    # -------------------------------------------------------------
+    # Anchor V4: Gossip communication (I2) vs complete isolation (I0)
     onset_v4 = 2 if args.quick_test else 5
 
     # Pre-train shared global model to onset_v4
