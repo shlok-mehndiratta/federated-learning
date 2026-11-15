@@ -10,18 +10,18 @@ __pycache__/
 *.so
 *.egg-info/
 
-# Experiment checkpoints & heavy caches
+# Allow tracking of experimental data, logs, and plots
+!runs/
+!runs/**
+*.log
+
+# Experiment checkpoints & heavy caches (always ignored, even inside runs)
 checkpoints/
 data/cache/
 *.pt
 *.pth
 *.tar
 *.ckpt
-
-# Allow tracking of experimental data, logs, and plots
-!runs/
-!runs/**
-*.log
 
 # Testing and IDE
 .pytest_cache/
