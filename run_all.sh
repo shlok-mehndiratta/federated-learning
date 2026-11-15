@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Experiment runner. Run from the repository root: bash run_all.sh <phase>
-# Phases: quick_check | repeat_check | recheck_saved_models | main | outage_length | cifar100 | fedavg_learning_rate | fedavg | reference_probe | results
+# Phases: quick_check | repeat_check | main | outage_length | cifar100 | fedavg_learning_rate | fedavg | reference_probe | results | report_figures
 # Long phases start background jobs with nohup; check logs with: tail -f logs/*.log
 set -euo pipefail
 DATA=${DATA:-experiments/data/cache}      # CIFAR cache directory
 PY=${PY:-python}
-mkdir -p logs runs results/main results/fedavg
+mkdir -p logs runs results/main results/fedavg results/report_figures
 phase=${1:-help}
 
 case "$phase" in
@@ -27,10 +27,6 @@ b = json.load(open(glob.glob("runs/repeat_check_b/*.json")[0]))
 for k in ["acc_A", "acc_B", "acc_ref", "acc_merge", "acc_cure2", "acc_probe_converged"]:
     print(f"{k:22s} {a[k]:.4f} {b[k]:.4f} {'OK' if abs(a[k]-b[k])<1e-4 else 'MISMATCH'}")
 EOF
-  ;;
-recheck_saved_models) # evaluate saved checkpoints from earlier experiments
-  nohup $PY experiments/recheck_saved_models.py --model_dirs runs/stage1_science runs/stage3_feature_skew \
-      --data_dir $DATA > logs/recheck_saved_models.log 2>&1 &
   ;;
 main)                 # main sweep: 5 sources x 6 outage starts x 5 seeds, fixed length L=5000
   for s in 42 43 44 45 46; do
@@ -78,5 +74,9 @@ results)              # generate tables, figures, and hypothesis test summaries
   $PY experiments/check_hypotheses.py --in_dirs runs/main runs/outage_length runs/cifar100 --out results/main/prereg_tests.json
   [ -d runs/fedavg ] && $PY experiments/summarize_fedavg.py --in_dir runs/fedavg --out_dir results/fedavg || true
   ;;
-*) echo "usage: bash run_all.sh {quick_check|repeat_check|recheck_saved_models|main|outage_length|cifar100|fedavg_learning_rate|fedavg|reference_probe|results}";;
+report_figures)       # the two figures used in the report
+  mkdir -p results/report_figures
+  $PY experiments/make_report_figures.py --in_dirs runs/main runs/outage_length runs/cifar100 --out_dir results/report_figures
+  ;;
+*) echo "usage: bash run_all.sh {quick_check|repeat_check|main|outage_length|cifar100|fedavg_learning_rate|fedavg|reference_probe|results|report_figures}";;
 esac
