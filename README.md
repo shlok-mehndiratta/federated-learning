@@ -1,180 +1,117 @@
-# When Can Federated Learning Survive Its Server?
-### Branch-and-Merge Recovery After Coordinator Outages
+# After a Server Outage in Federated Learning: Which Part of the Accuracy Lost by Merging Recovers, and Which Part Remains
 
-**Course Project:** Distributed Systems / Machine Learning  
-**Team Members:** Shlok Mehndiratta, Prathamesh Lokhande, Nikhil Kumar  
+Course project, Federated Learning, IISER Bhopal
+Team: Shlok Mehndiratta, Prathamesh Lokhande, Nikhil Kumar
 
-When a central parameter server in federated learning experiences a temporary outage, disconnected client cohorts continue local training on non-identical data distributions. When the server returns, the diverging cohort weights are merged by simple model averaging. In this project, we investigate whether and when simple weight merging recovers the accuracy of an unbroken federated baseline, how much damage concentrates in the final classification layer versus the representation backbone, and whether retraining only the final layer on a small server-held dataset is sufficient for recovery.
+In federated learning, a server repeatedly averages models trained by many clients. If the server is down for a while, groups of clients (cohorts) may keep training on their own data, and when the server returns their models are averaged. This project measures how much accuracy that average loses compared with a model that never had an outage. It also measures what the loss depends on, where in the network it comes from, and which part of it disappears once training resumes.
 
----
+## What we studied
 
-## 1. What We Studied
+- **Simulation.** We simulate an outage with ResNet-20 (with layer normalisation) on CIFAR-10 and CIFAR-100. One model is trained on all clients until the *outage start*. It is then copied three times:
+  - cohort A trains on its own data;
+  - cohort B trains on its own data;
+  - a *no-outage model* continues on all clients.
 
-We study what happens to a convolutional neural network (ResNet-20) when training splits into two isolated client cohorts during a server outage. We systematically vary when the outage starts during training, how long the outage lasts, and the degree of data heterogeneity between cohorts (including IID data, Dirichlet label skew, and synthetic feature skew). At reconnection, we merge the two diverging branches by averaging their weights and evaluate the performance penalty relative to an uninterrupted reference model trained for the exact same total budget. We inspect where damage accumulates within the network using linear probes and layer-wise canonical correlation analysis (CKA). Finally, we evaluate lightweight reconnection remedies—specifically retraining only the final classification layer, full-network fine-tuning, and output ensembling—and validate findings on CIFAR-10, CIFAR-100, and a 10-client federated averaging setup.
+  All three train for the same number of steps, the *outage length*.
+- **What we measure.** At reconnection, A and B are averaged into the *merged model*. The *merge loss* is the no-outage accuracy minus the merged accuracy. We split it into:
+  - the part removed by retraining only the final layer (*final-layer loss*);
+  - the part that remains in the earlier layers (*earlier-layer loss*).
+- **Repairs.** We compare simple repairs (retraining the final layer or the whole model on 200 images held by the server, keeping one or both cohort models). We also measure the *remaining gap* after 1,000 steps of resumed training.
+- **How the cohorts' data differ.** Five settings: same class mix, label skew (90/10), disjoint classes, and mild or strong image shift (contrast, blur and noise on one cohort's images).
 
----
+## Setup
 
-## 2. How to Set Up
-
-### Environment
-The project requires Python 3.10+ and a CUDA-compatible GPU.
+Python 3.10 or newer and a CUDA GPU.
 
 ```bash
-# Clone repository
 git clone https://github.com/shlok-mehndiratta/federated-learning.git
 cd federated-learning
-
-# Create and activate virtual environment
 python -m venv .venv
 source .venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Data Directory
-CIFAR-10 and CIFAR-100 datasets are downloaded automatically on first run to `data/cache/`. You can specify a custom data path by setting `DATA=/path/to/cache`.
+CIFAR-10 and CIFAR-100 are downloaded to `data/cache/` on first use. Set `DATA=/path/to/cache` to use another folder.
 
----
+## Reproducing the results
 
-## 3. How to Reproduce the Results
+Every stage is one command in `run_all.sh`. Times are for one RTX PRO 6000 GPU with several runs in parallel.
 
-All experiments, verification steps, and reporting pipelines are automated through `run_all.sh`. Execute the phases in the following order:
+| Step | Command | What it does | Time |
+|---|---|---|---|
+| 1 | `bash run_all.sh quick_check` | Runs every code path with a tiny budget | ~5 min |
+| 2 | `bash run_all.sh repeat_check` | Runs one setting twice and checks the results are identical | ~5 min |
+| 3 | `bash run_all.sh main` | CIFAR-10: 5 cohort settings × 6 outage starts × 5 seeds, outage length 5,000 steps (150 runs) | ~8–10 h |
+| 4 | `bash run_all.sh outage_length` | CIFAR-10: outage lengths 1,000–20,000 steps at a 2% start, 3 seeds (36 runs) | ~5 h |
+| 5 | `bash run_all.sh cifar100` | CIFAR-100: 3 cohort settings × 4 outage starts × 3 seeds (36 runs) | ~4 h |
+| 6 | `bash run_all.sh fedavg_learning_rate` | Short learning-rate trial for the ten-client simulation | ~30 min |
+| 7 | `LR=0.03 MOM=0.9 bash run_all.sh fedavg` | Ten clients in two cohorts with standard federated averaging, 3 seeds (12 runs) | ~3 h |
+| 8 | `bash run_all.sh reference_probe` | Retrains the final layer of each no-outage model (needed for the loss split); repeats the no-outage training and checks it matches the saved result | ~1.5 h |
+| 9 | `bash run_all.sh results` | Tables, statistical tests and diagnostic figures | ~1 min |
+| 10 | `bash run_all.sh report_figures` | The two figures used in the report | ~1 min |
 
-```bash
-# 1. Quick check (~3-5 min)
-# Tests every code path with a minimal training budget on CIFAR-10 and CIFAR-100
-DATA=data/cache bash run_all.sh quick_check
-
-# 2. Repeatability check (~2 min)
-# Verifies that two runs with the same random seed produce bitwise identical outputs
-DATA=data/cache bash run_all.sh repeat_check
-
-# 3. Check saved models from earlier experiments (~5 min, no GPU training)
-# Evaluates saved model checkpoints with corrected diagnostics
-DATA=data/cache bash run_all.sh recheck_saved_models
-
-# 4. Main experiment sweep (~6-8 hours across 5 GPU seeds)
-# 5 data distributions x 6 outage start times x 5 seeds, fixed outage length L=5000 (150 runs)
-DATA=data/cache bash run_all.sh main
-
-# 5. Outage length sweep (~2-3 hours)
-# Sweeps outage duration L in {1000, 2500, 10000, 20000} at fixed start k=2% across 3 seeds (36 runs)
-DATA=data/cache bash run_all.sh outage_length
-
-# 6. CIFAR-100 experiment (~2-3 hours)
-# Evaluates scaling to 100 classes across 3 distributions and 4 outage starts across 3 seeds (36 runs)
-DATA=data/cache bash run_all.sh cifar100
-
-# 7. Federated learning client hyperparameter test (~15 min)
-# Compares client learning rates and momentum values for 10-client FedAvg
-DATA=data/cache bash run_all.sh fedavg_learning_rate
-
-# 8. Federated learning outage experiment (~4 hours)
-# 10-client FedAvg outage experiment (40 outage rounds) across 3 seeds (12 runs)
-LR=0.03 MOM=0.9 DATA=data/cache bash run_all.sh fedavg
-
-# 9. Reference backbone probe calculation (~1.5 hours across 4 shards)
-# Retrains the no-outage reference model to compute reference backbone probes for clean damage separation
-DATA=data/cache bash run_all.sh reference_probe
-
-# 10. Generate all tables, figures, and hypothesis test summaries (~1 min)
-DATA=data/cache bash run_all.sh results
-```
-
----
-
-## 4. Folder Layout
+## Folder layout
 
 ```
-.
-├── experiments/      # Experiment runner scripts, model re-evaluations, and plotting code
-├── fl_outage/        # ResNet-20 model architecture, LayerNorm, and dataset splitting utilities
-├── runs/             # Raw experiment run outputs (JSON files and cached model trunks)
-│   ├── main/         # Main sweep (5 distributions x 6 outage starts x 5 seeds)
-│   ├── outage_length/# Outage duration sweep runs (L = 1000 to 20000)
-│   ├── cifar100/     # CIFAR-100 scaling runs
-│   └── fedavg/       # 10-client federated averaging outage runs
-├── results/          # Compiled tables, figures, and statistical test outputs
-│   ├── main/         # LaTeX tables, summary JSON, and figures for main experiments
-│   └── fedavg/       # LaTeX tables for federated averaging experiments
-├── tests/            # Automated test suite (determinism, parameter mapping, split isolation)
-├── data/             # Cached datasets (CIFAR-10, CIFAR-100)
-└── docs/             # Supporting documentation, notes, and progress reports
+experiments/   experiment and analysis scripts (see below)
+fl_outage/     ResNet-20 model, layer normalisation, data loading
+runs/          one JSON file per run (main/, outage_length/, cifar100/, fedavg/)
+results/       tables, figures and test results produced from runs/
+tests/         automated checks (data splits, layer grouping, repeatability)
+PLANNED_TESTS.md     hypotheses and the tests used to judge them
+CHANGES_FROM_PLAN.md every change made to that plan, with reasons
 ```
 
----
+| Script | Purpose |
+|---|---|
+| `experiments/run_outage_experiment.py` | One outage experiment per run: shared training, outage, merge, measurements, repairs, resumed training |
+| `experiments/add_reference_probe.py` | Adds the final-layer retraining of the no-outage model to finished runs |
+| `experiments/run_fedavg_outage.py` | Ten-client federated averaging version of the experiment |
+| `experiments/check_hypotheses.py` | All statistical tests reported in the report |
+| `experiments/make_tables_and_figures.py` | Summary tables and diagnostic figures |
+| `experiments/make_report_figures.py` | The figures used in the report |
+| `experiments/summarize_fedavg.py` | Tables for the ten-client simulation |
 
-## 5. Where Each Report Figure and Table Comes From
+## Where each part of the report comes from
 
-Every figure and table in the final report is generated programmatically from raw run JSONs:
+| Report item | Source |
+|---|---|
+| Figure 2 (merge loss vs. outage start and length) | `results/report_figures/fig_outage_start_and_length.pdf` from `make_report_figures.py` |
+| Figure 3 (resumed training; remaining gap vs. earlier-layer loss) | `results/report_figures/fig_lasting_gap.pdf` from `make_report_figures.py` |
+| Table 3 (merge loss and its two parts) | `results/main/summary.json` and `check_hypotheses.py` output |
+| Table 4 (layer exchange, averaging block by block) | `swap` entries in `results/main/summary.json` |
+| Table 5 (repairs at reconnection) | `results/main/table_cures.tex` and `check_hypotheses.py` output |
+| All p-values and confidence intervals in the text | `check_hypotheses.py` output (`results/main/prereg_tests.json`) |
+| Ten-client simulation | `runs/fedavg/` and `summarize_fedavg.py` |
 
-| Report Artifact | Producing Script | Source Run Folders | Description |
-| :--- | :--- | :--- | :--- |
-| `table_core.tex` | `experiments/make_tables_and_figures.py` | `runs/main/`, `runs/outage_length/`, `runs/cifar100/` | Main results table: reference accuracy, naive merge accuracy, merge penalty, and final layer gain/residual with 95% CIs. |
-| `table_cures.tex` | `experiments/make_tables_and_figures.py` | `runs/main/`, `runs/outage_length/`, `runs/cifar100/` | Reconnection remedies comparison: naive merge, final layer retraining (Cure 2), full fine-tuning, ensembling, and Holm-adjusted $p$-values. |
-| `table_policy.tex` | `experiments/make_tables_and_figures.py` | `runs/main/`, `runs/cifar100/` | Reconnection decision policy regret evaluated in-sample on CIFAR-10 and held out on CIFAR-100. |
-| `table_fl_main.tex` | `experiments/summarize_fedavg.py` | `runs/fedavg/` | 10-client FedAvg outage results: gap to uninterrupted baseline, naive merge, and final layer recalibration gain. |
-| `fig_onset_cifar10.pdf` | `experiments/make_tables_and_figures.py` | `runs/main/` | 3-panel figure: merge penalty, recoverable final layer share, and final layer retraining gain vs. outage start $k$ on CIFAR-10. |
-| `fig_onset_cifar100.pdf` | `experiments/make_tables_and_figures.py` | `runs/cifar100/` | 3-panel figure: merge penalty, recoverable final layer share, and final layer retraining gain vs. outage start $k$ on CIFAR-100. |
-| `fig_length_cifar10.pdf` | `experiments/make_tables_and_figures.py` | `runs/outage_length/` | Merge penalty as a function of outage duration $L \in [1000, 20000]$ steps. |
-| `fig_mechanism_cifar10.pdf`| `experiments/make_tables_and_figures.py` | `runs/main/` | 4-panel diagnostic figure: linear weight interpolation paths, layer-wise CKA alignment across depth, stage-wise partial merges, and recovery curves. |
-| `prereg_tests.json` | `experiments/check_hypotheses.py` | `runs/main/`, `runs/outage_length/`, `runs/cifar100/` | Formal statistical tests (paired $t$-tests, CIs, regression slopes, Holm corrections) for all planned project hypotheses. |
+## Names used in the code
 
----
+| Report term | Name in code / JSON | Meaning |
+|---|---|---|
+| Outage start | `onset_pct` | Percentage of a 25,000-step reference budget trained before the outage |
+| Outage length | `L` | Steps each cohort trains alone during the outage |
+| No-outage model | `acc_ref` | Accuracy of the copy that kept training on all clients |
+| Merged model | `acc_merge` | Accuracy of the parameter average of cohorts A and B |
+| Merge loss | `penalty` | `acc_ref - acc_merge` |
+| Final layer | `fc` | The last layer, mapping 64 features to class scores |
+| Earlier layers | all parameters except `fc` | First convolution and the three residual blocks |
+| Final layer retrained (merged model) | `acc_probe_converged` | Final layer retrained on all client images until it stops improving, earlier layers fixed |
+| Final layer retrained (no-outage model) | `acc_probe_ref` | The same, on the no-outage model |
+| Earlier-layer loss | — | `acc_probe_ref - acc_probe_converged` |
+| Final-layer loss | — | merge loss minus earlier-layer loss |
+| Retrain final layer (repair) | `acc_cure2` | Final layer retrained on the 200 server images (20 per class on CIFAR-10), 5 epochs |
+| Retrain whole model (repair) | `acc_cure2_fullft` | Whole model retrained on the same 200 images, 5 epochs |
+| Keep both models | `acc_ensemble_full` | Predictions of cohorts A and B averaged |
+| Keep the better cohort | `acc_best_branch` | Cohort model with higher validation accuracy |
+| Layer exchange | `path_head_only_acc[0]`, `[-1]` / `path_body_only_acc[0]`, `[-1]` | Averaged earlier layers with A's / B's final layer; A's / B's earlier layers with the averaged final layer |
+| Averaging block by block | `stagewise_merge_acc` | Accuracy after averaging the network up to each block |
+| Resumed training | `recovery_merge`, `recovery_cure2`, `recovery_ref` | Accuracy after 50, 100, 250, 500, 1,000 steps on all clients |
+| Remaining gap | — | `recovery_ref[-1] - recovery_merge[-1]` |
+| Distance between cohort models | `d_pair`, `d_head`, `d_body` | Root-mean-square difference per parameter (all, final layer, earlier layers) |
 
-## 6. Names Used in the Code
+## Limitations
 
-To prevent confusion between plain terms in the report and internal identifiers in the JSON files, refer to this mapping:
-
-| Plain Report Term | Code / JSON Identifier | Explanation |
-| :--- | :--- | :--- |
-| Outage start time ($k$) | `onset_pct` / `onset_rounds` | Percentage of reference training completed before the server outage begins. |
-| Outage length ($L$) | `L` | Number of gradient steps (or federated rounds) during which cohorts train in isolation. |
-| No-outage model | `acc_ref` / `acc_no_outage` | Test accuracy of the unbroken reference model trained for the same total steps without an outage. |
-| Naive model merge | `acc_merge` / `acc_naive` | Test accuracy of the simple weight average $(W_A + W_B) / 2$ immediately upon reconnection. |
-| Merge penalty | `penalty` | Accuracy drop from the naive merge relative to the no-outage model (`acc_ref - acc_merge`). |
-| Final classification layer | `head` / `fc` | Final linear projection layer (`fc.weight`, `fc.bias`). |
-| Rest of the network | `body` / `trunk` | All convolutional blocks and normalization layers preceding the classification head. |
-| Retrain final layer (few-shot) | `acc_cure2` | Reconnection remedy: retraining only the final layer on 200 server images per class using L-BFGS. |
-| Converged final layer probe | `acc_probe_converged` / `acc_probe` | Diagnostic ceiling: retraining the final layer on all clean training data while keeping the merged body fixed. |
-| Reference backbone probe | `acc_probe_ref` | Diagnostic probe trained on the unbroken no-outage reference body to isolate backbone damage. |
-| Full fine-tuning | `acc_cure2_fullft` | Fine-tuning the entire network on the small server dataset with a reduced learning rate. |
-| Output ensemble | `acc_ensemble_full` / `acc_ensemble` | Softmax probability average of both branch models: $\frac{1}{2}(\text{softmax}(f_A(x)) + \text{softmax}(f_B(x)))$. |
-| Cohort weight divergence | `d_pair` | Normalized Euclidean distance between branch weights: $\|W_A - W_B\| / \frac{1}{2}(\|W_A\| + \|W_B\|)$. |
-| Final layer vs. body drift ratio | `rho` ($\rho$) | Relative drift of final layer compared to body: $(\|W_{fc,A} - W_{fc,B}\| / \|W_{fc}\|) / (\|W_{body,A} - W_{body,B}\| / \|W_{body}\|)$. |
-
----
-
-## 7. Code from the First Submission
-
-Our original preliminary submission included exploratory code that has since been superseded:
-- `science_harness.py`: Initial benchmarking runner for early exploratory runs.
-- `experiments/01_preliminary_metrics.py` through `experiments/05_reconnection_policy.py`: Preliminary experiment scripts from earlier project milestones; the consolidated runner in `experiments/run_outage_experiment.py` replaces them.
-- `fl_outage/fl/`: Legacy federated simulation scaffolding; multi-client validation is now handled directly by `experiments/run_fedavg_outage.py`.
-
-These legacy files are retained for project history, but all reported results in this submission are produced by the scripts in `experiments/`.
-
----
-
-## 8. What Changed Since Our First Submission
-
-We made several important corrections and methodology improvements between our first submission and this final report:
-1. **Fixed Outage Duration ($L$):** In the first submission, outage length was inadvertently tied to outage start time ($L = 20000 - \text{onset}$), which confounded start time with duration. We fixed outage duration to a constant $L = 5000$ steps across all start times.
-2. **Proper No-Outage Comparison Model:** We introduced an uninterrupted reference model trained for the exact same total step budget, replacing previous comparisons against pre-outage checkpoints.
-3. **Disjoint Server Validation Split:** Reconnection calibration now uses a dedicated 2,000-image balanced dataset (200 images/class on CIFAR-10, 20 images/class on CIFAR-100) strictly disjoint from both client training data and test sets.
-4. **Guaranteed Repeatability:** Added explicit PyTorch and CUDA deterministic workspace settings (`CUBLAS_WORKSPACE_CONFIG=:4096:8`) and unified seed generators so that any experiment produces exact bitwise identical results when rerun.
-5. **Corrected Diagnostic Analysis:** Fixed a parameter mapping error in partial merges that previously mapped all body parameters to stage 0, and replaced unweighted ratio averaging with robust paired difference tests and confidence intervals.
-6. **Data Partitioning Fix:** Resolved an indexing issue in the earlier asymmetric label-skew implementation to guarantee clean class separation between cohorts.
-
----
-
-## 9. Limitations & Tools Used
-
-### Limitations
-- **Cohort-Level Simulation:** Most of our experiments simulate two parallel client cohorts training via continuous SGD rather than dozens of edge devices performing local federated epochs.
-- **Under-Trained FedAvg Benchmark:** In the 10-client FedAvg experiment, runs trained for 42 to 82 rounds due to compute limits, reaching ~55% accuracy on CIFAR-10. This is reported honestly as an exploratory boundary rather than a fully converged production deployment.
-- **Balanced Server Calibration Data:** Our final-layer recalibration remedy (Cure 2) assumes the server holds a small balanced validation set (200 images per class), which may not always be available in strictly private or unbalanced settings.
-
-### Tools Used
-We utilized an AI coding assistant (Antigravity / Claude) to assist with experiment scripting, test generation, and LaTeX table automation. All scientific hypotheses, experimental results, and written interpretations were designed, evaluated, and verified by the authors.
+- **Cohort-level simulation.** Each cohort is simulated as one training run on its combined data.
+- **Scope.** One network (ResNet-20) and two datasets.
+- **Server data.** The repairs need 200 labelled images held by the server.
+- **Ten-client simulation.** It was under-trained (no-outage accuracy 40–56%), so it does not confirm the main results.
