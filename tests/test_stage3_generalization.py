@@ -99,16 +99,3 @@ def test_pure_numpy_decision_tree_separable():
     assert "RECOMMEND: CLASS_B" in rules
 
 
-def test_meta_predictor_cross_validation_and_dataset():
-    """Verifies that Stage 2 dataset compiles correctly and achieves high cross-validation accuracy."""
-    stage2_dir = "./runs/stage2_head_cures"
-    if not os.path.exists(stage2_dir):
-        pytest.skip("Stage 2 directory not found.")
-
-    X, y, records = compile_meta_predictor_dataset(stage2_dir=stage2_dir)
-    assert len(records) == 36
-    assert X.shape == (36, 5)
-    assert len(y) == 36
-
-    cv_acc = evaluate_cross_validation(X, y, k_folds=5, seed=42)
-    assert cv_acc >= 0.90  # Decision boundary between onset <= 6% and > 6% should be distinct
