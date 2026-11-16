@@ -8,8 +8,11 @@ sweep, and the CIFAR-100 runs. It computes 95% confidence intervals and produces
   * Figures: fig_onset_cifar10.pdf, fig_onset_cifar100.pdf,
              fig_length_cifar10.pdf, fig_mechanism_cifar10.pdf
 
-Usage:
-    python experiments/make_tables_and_figures.py --in_dirs runs/main runs/outage_length runs/cifar100 --out_dir results/main
+Reads: run JSON files from --in_dirs.
+Writes: summary.json, LaTeX tables, and PDF figures to --out_dir.
+
+Example:
+  python experiments/make_tables_and_figures.py --in_dirs runs/main runs/outage_length runs/cifar100 --out_dir results/main
 """
 import argparse, glob, json, os
 from collections import defaultdict

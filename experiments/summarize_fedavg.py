@@ -5,8 +5,11 @@ Aggregates FedAvg run JSON files from runs/fedavg and produces:
   * Table: table_fl_main.tex (merge outcomes, no-outage comparison, final layer recalibration)
   * Policy comparison: table_fl_policy.tex
 
-Usage:
-    python experiments/summarize_fedavg.py --in_dir runs/fedavg --out_dir results/fedavg
+Reads: run JSON files from --in_dir.
+Writes: table_fl_main.tex, table_fl_policy.tex, and fig_fl_validation.pdf to --out_dir.
+
+Example:
+  python experiments/summarize_fedavg.py --in_dir runs/fedavg_long --out_dir results/fedavg_long
 """
 import argparse, glob, json, os
 from collections import Counter

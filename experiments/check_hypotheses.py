@@ -1,16 +1,19 @@
 """
-Statistical tests for project hypotheses computed directly from experiment run JSON files.
+Statistical tests for the main outage experiments, computed directly from run JSON files.
 
-Evaluates hypotheses from PLANNED_TESTS.md:
-  * H1: Outage start effect on merge penalty (fixed outage length L = 5000)
-  * H2: Outage length effect on merge penalty (fixed start k = 2%)
-  * H3: Decomposition of merge penalty (damage to final layer vs rest of network)
-  * H5: Gain from retraining the final layer (Cure 2 vs naive merge)
-  * H6 / H6b: Recovery after reconnection (persistent gap vs backbone damage)
-  * H8: Reconnection decision policy regret
+Evaluates:
+  * Outage start effect on merge loss (fixed outage length L = 5000)
+  * Outage length effect on merge loss (fixed start k = 2%)
+  * Decomposition of merge loss (damage to final layer vs rest of network)
+  * Gain from retraining the final layer on server images
+  * Recovery after reconnection (persistent gap vs earlier-layer loss)
+  * Reconnection decision policy regret
 
-Usage:
-    python experiments/check_hypotheses.py --in_dirs runs/main runs/outage_length runs/cifar100 --out results/main/prereg_tests.json
+Reads: run JSON files from --in_dirs.
+Writes: summary JSON file with test statistics to --out.
+
+Example:
+  python experiments/check_hypotheses.py --in_dirs runs/main runs/outage_length runs/cifar100 --out results/main/prereg_tests.json
 """
 import argparse, glob, json, os
 from collections import defaultdict
