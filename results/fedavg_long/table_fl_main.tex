@@ -1,0 +1,9 @@
+\begin{table*}[t]\centering\small
+\caption{Federated outage experiments (10 clients, 2 cohorts of 5, FedAvg; outage of $L$ rounds after $k$ pre-outage rounds). Mean $\pm$ SD over seeds. \emph{No outage}: global FedAvg continued for the same $L$ rounds. \emph{Cure 2}: head-only recalibration on 200 server-held images disjoint from all client data. \emph{Head ceiling}: converged head on all client data (diagnostic only). $\Delta$: paired Cure 2 gain over naive merge with 95\% CI.}
+\label{tab:fl_main}\resizebox{\textwidth}{!}{\begin{tabular}{lccccccccc}\toprule
+Cohort data & $k$ & No outage & Naive merge & Cure 2 & Output ens. & Head ceiling & Head share & $\Delta$ Cure 2 [95\% CI] & CKA$_{A,B}$\\\midrule
+IID cohorts & 2 & $81.32 \pm 1.21$ & $73.60 \pm 0.66$ & $73.59 \pm 0.52$ & $80.74 \pm 1.50$ & $76.82 \pm 0.89$ & 42\% & $-0.01$ [-0.55, +0.53] & 0.90\\
+IID cohorts & 25 & $84.37 \pm 0.66$ & $80.62 \pm 0.07$ & $80.60 \pm 1.16$ & $83.76 \pm 0.54$ & $82.35 \pm 0.76$ & 46\% & $-0.02$ [-3.03, +2.99] & 0.90\\
+Label skew $s{=}0.8$ & 2 & $75.19 \pm 1.66$ & $45.64 \pm 3.47$ & $52.93 \pm 1.48$ & $77.76 \pm 1.55$ & $61.49 \pm 0.77$ & 54\% & $+7.28$ [+1.47, +13.09] & 0.85\\
+Label skew $s{=}0.8$ & 25 & $79.83 \pm 0.81$ & $64.31 \pm 0.41$ & $66.07 \pm 2.63$ & $79.90 \pm 1.00$ & $71.19 \pm 0.34$ & 44\% & $+1.75$ [-4.75, +8.26] & 0.85\\
+\bottomrule\end{tabular}}\end{table*}

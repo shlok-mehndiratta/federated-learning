@@ -1,0 +1,55 @@
+{
+ "source": "iid",
+ "s": 0.0,
+ "onset_rounds": 25,
+ "seed": 42,
+ "L": 80,
+ "acc_onset": 0.3278000056743622,
+ "acc_A": 0.6190999746322632,
+ "acc_B": 0.6008999943733215,
+ "acc_no_outage": 0.6085000038146973,
+ "acc_naive": 0.609499990940094,
+ "acc_cure2": 0.6093999743461609,
+ "acc_ensemble": 0.6317999958992004,
+ "acc_probe": 0.6290000081062317,
+ "cka_penult": 0.9195334911346436,
+ "d_pair": 0.016871392726898193,
+ "d_body": 0.01659221015870571,
+ "d_head": 0.06474224478006363,
+ "head_body_ratio": 3.901966293869189,
+ "recovery_naive": [
+  0.6225000023841858
+ ],
+ "recovery_cure2": [
+  0.6164000034332275
+ ],
+ "recovery_no_outage": [
+  0.6419999599456787
+ ],
+ "seconds": 2136.0245394706726,
+ "args": {
+  "sources": [
+   "iid"
+  ],
+  "onsets": [
+   25
+  ],
+  "seeds": [
+   42
+  ],
+  "L": 80,
+  "R": 1,
+  "local_steps": 20,
+  "batch_size": 128,
+  "lr": 0.05,
+  "warmup_rounds": 3,
+  "momentum": 0.0,
+  "server_momentum": 0.9,
+  "server_lr": 1.0,
+  "within_alpha": null,
+  "amp": 1,
+  "data_dir": "data/cache",
+  "out_dir": "runs/fedavg_tuning/C_sm09_lr005_ls20",
+  "fake_data": false
+ }
+}
