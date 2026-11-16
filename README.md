@@ -13,6 +13,7 @@ When a federated learning server is unavailable, groups of clients (cohorts) may
 ```
 experiments/      scripts that run the experiments and analyse the results
 fl_outage/        model (ResNet-20 with layer normalisation) and data loading
+analysis/         reference analysis and visualization utilities (main results use experiments/)
 runs/             one result file (JSON) per training run
   main/             CIFAR-10: 5 cohort settings x 6 outage starts x 5 seeds
   outage_length/    CIFAR-10: outage lengths from 1,000 to 20,000 steps
@@ -35,8 +36,10 @@ requirements.txt  Python packages
 | `experiments/check_hypotheses.py` | Statistical tests for the main experiments |
 | `experiments/check_fedavg.py` | Statistical tests for the federated simulation |
 | `experiments/make_tables_and_figures.py` | Summary tables and diagnostic figures |
-| `experiments/make_report_figures.py` | Figures used in the report |
+| `experiments/make_report_figures.py` | Generates summary and publication figures |
 | `experiments/summarize_fedavg.py` | Summary tables for the federated simulation |
+
+`fl_outage/fl/`, `fl_outage/metrics/`, and `analysis/` provide reference implementations and metrics; experiment workflows are run directly via the scripts above.
 
 ## Setup
 
@@ -58,21 +61,21 @@ bash run_all.sh outage_length    # outage-length experiments
 bash run_all.sh cifar100         # CIFAR-100 experiments
 bash run_all.sh reference_probe  # final-layer retraining of the no-outage models
 bash run_all.sh results          # tables, statistics, diagnostic figures
-bash run_all.sh report_figures   # figures used in the report
+bash run_all.sh report_figures   # summary and publication figures
 ```
 
 Federated simulation, with the chosen settings (server momentum 0.7, client momentum 0.9, learning rate 0.03, 50 local steps per round):
 
 ```bash
 for s in 42 43 44; do for src in iid label0.8; do for k in 2 25; do
-  python experiments/run_fedavg_outage.py --sources $src --onsets $k --L 80 --R 10 --batch_size 128       --server_momentum 0.7 --momentum 0.9 --lr 0.03 --local_steps 50 --seeds $s --out_dir runs/fedavg_long
+  python experiments/run_fedavg_outage.py --sources $src --onsets $k --L 80 --R 10       --batch_size 128       --server_momentum 0.7 --momentum 0.9 --lr 0.03 --local_steps 50 --seeds $s --out_dir runs/fedavg_long
 done; done; done
 python experiments/check_fedavg.py --in_dir runs/fedavg_long --out results/fedavg_long/fedavg_checks.json
 ```
 
-## Where the report's figures and tables come from
+## Key figures and tables
 
-| Report | Source |
+| Item | Source |
 |---|---|
 | Figure 2: merge loss vs. outage start and length | `results/report_figures/fig_outage_start_and_length.pdf` |
 | Figure 3: merge loss split into two parts | `results/report_figures/fig_damage_split.pdf` |

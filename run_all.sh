@@ -71,7 +71,7 @@ reference_probe)      # retrain the reference model to compute reference backbon
   ;;
 results)              # generate tables, figures, and hypothesis test summaries
   $PY experiments/make_tables_and_figures.py --in_dirs runs/main runs/outage_length runs/cifar100 --out_dir results/main
-  $PY experiments/check_hypotheses.py --in_dirs runs/main runs/outage_length runs/cifar100 --out results/main/prereg_tests.json
+  $PY experiments/check_hypotheses.py --in_dirs runs/main runs/outage_length runs/cifar100 --out results/main/hypothesis_tests.json
   [ -d runs/fedavg ] && $PY experiments/summarize_fedavg.py --in_dir runs/fedavg --out_dir results/fedavg || true
   ;;
 report_figures)       # the two figures used in the report

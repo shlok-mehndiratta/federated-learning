@@ -1,52 +1,18 @@
-# Virtual environment
-.venv/
-env/
-venv/
-
-# Python cache
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-*.egg-info/
-
-# Allow tracking of experimental data, logs, and plots
-!runs/
-!runs/**
-*.log
-
-# Experiment checkpoints & heavy caches (always ignored, even inside runs)
-checkpoints/
+.venv/
+venv/
+.pytest_cache/
+# Data, model files and local notes
 data/cache/
+experiments/data/
+checkpoints/
 *.pt
 *.pth
-*.tar
 *.ckpt
-
-# Testing and IDE
-.pytest_cache/
-.coverage
-htmlcov/
+*.log
+notes/
+# Editors
 .vscode/
 .idea/
-
-# Wandb
-wandb/
-
-# Reference repository (cloned external)
-external/
-
-# Documentation, plans, and private research notes (NEVER sync to GitHub)
-docs/
-*.pdf
-!results/report_figures/
-!results/report_figures/**
-DECISION_LOG.md
-PREREGISTRATION.md
-EMPIRICAL_FINDINGS.md
-*GUIDE*.md
-*plan*.md
-experiments/data/
-agent_handoff*
-
-notes/

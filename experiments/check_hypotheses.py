@@ -13,7 +13,7 @@ Reads: run JSON files from --in_dirs.
 Writes: summary JSON file with test statistics to --out.
 
 Example:
-  python experiments/check_hypotheses.py --in_dirs runs/main runs/outage_length runs/cifar100 --out results/main/prereg_tests.json
+  python experiments/check_hypotheses.py --in_dirs runs/main runs/outage_length runs/cifar100 --out results/main/hypothesis_tests.json
 """
 import argparse, glob, json, os
 from collections import defaultdict
@@ -59,7 +59,7 @@ def fmt(r):
 def main():
     ap = argparse.ArgumentParser(description="Evaluate planned hypothesis tests on experiment run JSON files.")
     ap.add_argument("--in_dirs", nargs="+", default=["runs/main", "runs/outage_length", "runs/cifar100"])
-    ap.add_argument("--out", default="results/main/prereg_tests.json")
+    ap.add_argument("--out", default="results/main/hypothesis_tests.json")
     ap.add_argument("--core_L", type=int, default=5000)
     ap.add_argument("--h2_onset", type=float, default=2.0)
     a = ap.parse_args()
