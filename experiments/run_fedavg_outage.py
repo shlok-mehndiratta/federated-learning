@@ -1,3 +1,5 @@
+import os
+os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 """
 Federated learning outage experiment (10 clients, 2 cohorts).
 
@@ -134,13 +136,23 @@ class Fed:
             acc = {k: wi * v.float() for k, v in s.items()} if acc is None else {k: acc[k] + wi * s[k].float() for k in acc}
         return acc
 
-    def run(self, state, cids, rounds, eval_fn=None, start_round=0):
+    def server_step(self, state, avg, buf):
+        beta, slr = self.a.server_momentum, self.a.server_lr
+        if beta == 0.0 and slr == 1.0:
+            return avg, buf
+        delta = {k: avg[k] - state[k].float() for k in avg}
+        buf = delta if buf is None else {k: beta * buf[k] + delta[k] for k in delta}
+        new_state = {k: state[k].float() + slr * buf[k] for k in buf}
+        return new_state, buf
+
+    def run(self, state, cids, rounds, eval_fn=None, start_round=0, buf=None):
         hist = []
         for i in range(rounds):
-            lr = self.a.lr * min(1.0, (start_round + i + 1) / self.a.warmup_rounds)  # global-round warmup
-            state = self.fedavg_round(state, cids, lr)
+            lr = self.a.lr * min(1.0, (start_round + i + 1) / self.a.warmup_rounds)
+            avg = self.fedavg_round(state, cids, lr)
+            state, buf = self.server_step(state, avg, buf)
             if eval_fn: hist.append(eval_fn(state))
-        return state, hist
+        return state, hist, buf
 
 
 # ----------------------------------------------------------------------------- evaluation
@@ -202,11 +214,12 @@ def run_one(source, k, seed, args, data, dev):
     t0 = time.time()
 
     init = {kk: v.clone() for kk, v in ResNet20LN(num_classes=10).to(dev).state_dict().items()}
-    w_k, _ = fed.run(init, ALL, k, start_round=0)                                   # 1. pre-outage FedAvg
+    w_k, _, buf_k = fed.run(init, ALL, k, start_round=0)                                   # 1. pre-outage FedAvg
     acc_onset = ev(w_k)
-    w_A, _ = fed.run(w_k, A, args.L, start_round=k)                                 # 2a. isolated cohorts
-    w_B, _ = fed.run(w_k, B, args.L, start_round=k)
-    w_ref, _ = fed.run(w_k, ALL, args.L, start_round=k)                             # 2b. no-outage counterfactual
+    clone = lambda b: None if b is None else {kk: v.clone() for kk, v in b.items()}
+    w_A, _, _ = fed.run(w_k, A, args.L, start_round=k, buf=clone(buf_k))                                 # 2a. isolated cohorts
+    w_B, _, _ = fed.run(w_k, B, args.L, start_round=k, buf=clone(buf_k))
+    w_ref, _, _ = fed.run(w_k, ALL, args.L, start_round=k, buf=clone(buf_k))                             # 2b. no-outage counterfactual
     w_mrg = avg_states(w_A, w_B)
 
     mA, mB, mM = [ResNet20LN(num_classes=10).to(dev) for _ in range(3)]
@@ -242,9 +255,9 @@ def run_one(source, k, seed, args, data, dev):
     d_pair = torch.sqrt(sum(v.pow(2).sum() for v in diff.values()) / (n_b + n_h)).item()
 
     # 4. recovery after reconnection
-    _, rec_naive = fed.run(w_mrg, ALL, args.R, ev, start_round=k + args.L)
-    _, rec_cure2 = fed.run(w_cure2, ALL, args.R, ev, start_round=k + args.L)
-    _, rec_ref = fed.run(w_ref, ALL, args.R, ev, start_round=k + args.L)
+    _, rec_naive, _ = fed.run(w_mrg, ALL, args.R, ev, start_round=k + args.L)
+    _, rec_cure2, _ = fed.run(w_cure2, ALL, args.R, ev, start_round=k + args.L)
+    _, rec_ref, _ = fed.run(w_ref, ALL, args.R, ev, start_round=k + args.L)
 
     rec = dict(source=source, s=s, onset_rounds=k, seed=seed, L=args.L,
                acc_onset=acc_onset, acc_A=acc(lA), acc_B=acc(lB), acc_no_outage=ev(w_ref),
@@ -270,6 +283,8 @@ def main():
     ap.add_argument("--lr", type=float, default=0.1)
     ap.add_argument("--warmup_rounds", type=int, default=3)
     ap.add_argument("--momentum", type=float, default=0.9, help="client-side SGD momentum")
+    ap.add_argument("--server_momentum", type=float, default=0.0, help="server momentum (FedAvgM); 0 = plain FedAvg")
+    ap.add_argument("--server_lr", type=float, default=1.0, help="server learning rate applied to the averaged update")
     ap.add_argument("--within_alpha", type=float, default=None, help="Dirichlet alpha across clients inside each cohort (None = IID)")
     ap.add_argument("--amp", type=int, default=1, help="bf16 autocast for local training")
     ap.add_argument("--data_dir", default="./data/cache")
@@ -278,7 +293,8 @@ def main():
     args = ap.parse_args()
     dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if dev.type == "cuda":
-        torch.backends.cudnn.benchmark = True; torch.backends.cuda.matmul.allow_tf32 = True; torch.backends.cudnn.allow_tf32 = True
+        torch.backends.cudnn.benchmark = False; torch.backends.cudnn.deterministic = True
+        torch.use_deterministic_algorithms(True, warn_only=True)
     os.makedirs(args.out_dir, exist_ok=True)
     data = load_cifar(args.data_dir, dev, fake=args.fake_data)
     for seed in args.seeds:
