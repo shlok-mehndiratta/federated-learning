@@ -66,7 +66,7 @@ def main():
         m = [mean_ci(pts([r["penalty"] for r in g[("cifar10", src, k, a.main_L)]])) for k in ks]
         ax[0].errorbar(ks, [x[0] for x in m], yerr=[x[1] for x in m], marker="o", capsize=3, label=NAMES[src])
     ax[0].set_xscale("log"); ax[0].axhline(0, color="gray", lw=0.7)
-    ax[0].set_xlabel("Outage start (% of the training budget)"); ax[0].set_ylabel("Accuracy lost by merging (points)")
+    ax[0].set_xlabel("Outage start (% of the training budget)"); ax[0].set_ylabel("Merge loss (points)")
     ax[0].set_title(f"(a) Outage of {a.main_L:,} steps, CIFAR-10"); ax[0].legend(fontsize=7)
     for src in ORDER:
         Ls = sorted(k[3] for k in g if k[0] == "cifar10" and k[1] == src and k[2] == a.length_start)
@@ -75,7 +75,7 @@ def main():
         m = [mean_ci(pts([r["penalty"] for r in g[("cifar10", src, a.length_start, L)]])) for L in Ls]
         ax[1].errorbar(Ls, [x[0] for x in m], yerr=[x[1] for x in m], marker="o", capsize=3, label=NAMES[src])
     ax[1].set_xscale("log"); ax[1].axhline(0, color="gray", lw=0.7)
-    ax[1].set_xlabel("Outage length (training steps)"); ax[1].set_ylabel("Accuracy lost by merging (points)")
+    ax[1].set_xlabel("Outage length (training steps)"); ax[1].set_ylabel("Merge loss (points)")
     ax[1].set_title(f"(b) Outage starting at {a.length_start:g}% of the budget, CIFAR-10"); ax[1].legend(fontsize=7)
     plt.tight_layout(); plt.savefig(os.path.join(a.out_dir, "fig_outage_start_and_length.pdf")); plt.close()
 
@@ -93,11 +93,11 @@ def main():
             r_net = np.mean(pts([r["acc_probe_ref"] - r["acc_probe_converged"] for r in S]))
             rest.append(r_net); fixable.append(np.mean(pts([r["penalty"] for r in S])) - r_net)
         x = np.arange(len(ks))
-        ax[i].bar(x, rest, label="Left in the rest of the network")
-        ax[i].bar(x, fixable, bottom=rest, label="Fixed by retraining the final layer")
+        ax[i].bar(x, rest, label="Earlier-layer loss")
+        ax[i].bar(x, fixable, bottom=rest, label="Final-layer loss")
         ax[i].set_xticks(x); ax[i].set_xticklabels([f"{k:g}%" for k in ks]); ax[i].set_title(NAMES[src], fontsize=9)
         ax[i].set_xlabel("Outage start")
-    ax[0].set_ylabel("Accuracy lost by merging (points)"); ax[0].legend(fontsize=7)
+    ax[0].set_ylabel("Merge loss (points)"); ax[0].legend(fontsize=7)
     plt.tight_layout(); plt.savefig(os.path.join(a.out_dir, "fig_damage_split.pdf")); plt.close()
 
     # 3. (a) recovery when training resumes, one example; (b) lasting gap vs. rest-of-network damage, all groups
@@ -125,8 +125,8 @@ def main():
         lr = stats.linregress(xs, ys); rho = stats.spearmanr(xs, ys)[0]
         xx = np.linspace(0, max(xs), 50); ax[1].plot(xx, lr.intercept + lr.slope * xx, color="gray", lw=1)
         ax[1].set_title(f"(b) All settings: Spearman {rho:.2f}, $R^2$ {lr.rvalue ** 2:.2f}")
-    ax[1].set_xlabel("Rest-of-network damage at reconnection (points)")
-    ax[1].set_ylabel("Lasting gap after 1,000 steps (points)"); ax[1].legend(fontsize=7)
+    ax[1].set_xlabel("Earlier-layer loss at reconnection (points)")
+    ax[1].set_ylabel("Remaining gap after 1,000 steps (points)"); ax[1].legend(fontsize=7)
     plt.tight_layout(); plt.savefig(os.path.join(a.out_dir, "fig_lasting_gap.pdf")); plt.close()
     print("wrote", ", ".join(sorted(os.listdir(a.out_dir))))
 

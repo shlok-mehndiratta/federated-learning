@@ -39,6 +39,8 @@ external/
 # Documentation, plans, and private research notes (NEVER sync to GitHub)
 docs/
 *.pdf
+!results/report_figures/
+!results/report_figures/**
 DECISION_LOG.md
 PREREGISTRATION.md
 EMPIRICAL_FINDINGS.md
